@@ -5,4 +5,11 @@ Console apps toolkit
 No tracked
 
 ## Roadmap
-- [ ] Basic wrapping (console write
+- [x] Basic wrapping (console write)
+- [x] Coloring
+- [x] Lining
+- [x] Headlines
+- [x] Custom lines
+- [x] Custom headlines
+- [ ] Menu
+- [ ] Customized menu
