@@ -27,7 +27,7 @@ Cli.Init(); // this you want to call first
 
 ### Basic printing
 ```csharp
-Cli.Printer.xxx - a static class
+Cli.Printer.xxx // a static class reference
 ```
 
 #### Basics
@@ -53,7 +53,7 @@ Cli.Printer.xxx - a static class
 - line - basically writes line with cornering
 - headline - basically writes 2 lines and headline between
 
-####Custom structures
+#### Custom structures
 - line - register own lining
 - headline - register own headlining
   
