@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>ConsoleZapp</RootNamespace>
+    <AssemblyName>CzappLib</AssemblyName>
+    <Authors>Vosiz</Authors>
+    <Copyright></Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Product>Vosiz.CzappLib</Product>
+    <Description>System.Console wrapper</Description>
+    <PackageProjectUrl>https://github.com/vosiz/consolezapp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vosiz/consolezapp</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+</Project>
