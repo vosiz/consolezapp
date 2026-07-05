@@ -1,6 +1,6 @@
 # Change log
 ## Current version
-### 1.0.1 - Print helpers
+### 1.0.7 - Print helpers
 - extension for: NewLine/Nl
 - extension for: Result
 
