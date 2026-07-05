@@ -43,6 +43,14 @@ namespace CzappTester
                     // TODO
                     break;
 
+                case 4:
+                    Cli.Init();
+                    Test04_PrintSafety.DoubleFormatFix();
+                    Test04_PrintSafety.LegitFormatStillWorks();
+                    Test04_PrintSafety.ThrowsPrintException();
+                    Test04_PrintSafety.EscapeHelpers();
+                    break;
+
                 default:
                     Console.WriteLine($"Test level ({testn}) is not defined");
                     break;
@@ -61,7 +69,7 @@ namespace CzappTester
         static void Main(string[] args)
         {
 
-            Test(0, 1, 2);
+            Test(0, 1, 2, 4);
 
             Console.ReadLine();
         }
