@@ -10,19 +10,40 @@ namespace ConsoleZapp
         // Legacy - write
         public void Write(string fmt = null, params object[] args)
         {
-            Console.Write(string.Format(fmt, args));
+            try
+            {
+                Console.Write(string.Format(fmt, args));
+            }
+            catch (Exception exc)
+            {
+                throw new PrintException($"Write failed, fmt: {fmt}", exc);
+            }
         }
 
         // Legacy - write nl
         public void WriteLine(string fmt = null, params object[] args)
         {
-            Console.WriteLine(string.Format(fmt, args));
+            try
+            {
+                Console.WriteLine(string.Format(fmt, args));
+            }
+            catch (Exception exc)
+            {
+                throw new PrintException($"WriteLine failed, fmt: {fmt}", exc);
+            }
         }
 
         // Format string
         public void Sprintf(string fmt, params object[] args)
         {
-            Write(string.Format(fmt, args));
+            try
+            {
+                Console.Write(string.Format(fmt, args));
+            }
+            catch (Exception exc)
+            {
+                throw new PrintException($"Sprintf failed, fmt: {fmt}", exc);
+            }
         }
 
         // Format string nl

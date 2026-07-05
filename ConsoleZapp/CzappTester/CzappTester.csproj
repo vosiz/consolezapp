@@ -49,6 +49,7 @@
     <Compile Include="Tests\Test03_Menu.cs" />
     <Compile Include="Tests\Test02_SimpleStruct.cs" />
     <Compile Include="Tests\Test00_SimplePrint.cs" />
+    <Compile Include="Tests\Test04_PrintSafety.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
