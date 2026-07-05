@@ -35,6 +35,8 @@ Cli.Printer.xxx // a static class reference
 - WriteLine - writes formatted string with new line
 - Sprintf - (alias) writes formatted string
 - Sprintfln - (alias) writes formatted string with new line
+- NewLine - writes blank line(s) (optional count, default 1)
+- Nl - (alias) NewLine
 
 #### Messages
 - Debug - debug level message (grey)
@@ -44,6 +46,7 @@ Cli.Printer.xxx // a static class reference
 - Exception - more red-ish
 - Success - success-liek message
 - Fail - failure-like message
+- Result - prints colored test result (Text: [OK]/[FAIL])
 
 #### Customization
 - Custom - uset to call printing with certain key registered

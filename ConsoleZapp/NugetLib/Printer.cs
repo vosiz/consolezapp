@@ -32,6 +32,19 @@ namespace ConsoleZapp
             Sprintf(fmt, args);
         }
 
+        // Prints blank line(s)
+        public void NewLine(int count = 1)
+        {
+            for (int i = 0; i < count; i++)
+                Console.WriteLine();
+        }
+
+        // Alias for NewLine
+        public void Nl(int count = 1)
+        {
+            NewLine(count);
+        }
+
 
         // Debug
         public void Debug(string fmt, params object[] args) {
@@ -90,6 +103,19 @@ namespace ConsoleZapp
         public void Custom(string key, string fmt, params object[] args) {
 
             Clrprintfln(key, fmt, args);
+        }
+
+        // Prints test result
+        public void Result(string text, bool result) {
+
+            Write($"{text}: [");
+
+            if (result)
+                Clrprintf(Cli.Conclr.Green, Cli.Conclr.DefBg, "OK");
+            else
+                Clrprintf(Cli.Conclr.Red, Cli.Conclr.DefBg, "FAIL");
+
+            WriteLine("]");
         }
 
     }
