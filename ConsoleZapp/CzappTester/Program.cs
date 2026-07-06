@@ -70,6 +70,11 @@ namespace CzappTester
                     Test02_Progress.RendersWithUnit();
                     break;
 
+                case 8:
+                    Cli.Init();
+                    Test03_Percentage.RendersValue();
+                    break;
+
                 default:
                     Console.WriteLine($"Test level ({testn}) is not defined");
                     break;
