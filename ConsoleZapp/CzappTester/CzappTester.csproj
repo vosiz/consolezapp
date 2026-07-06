@@ -54,6 +54,7 @@
     <Compile Include="Tests\Controls\Test01_LabeledControl.cs" />
     <Compile Include="Tests\Controls\Test02_Progress.cs" />
     <Compile Include="Tests\Controls\Test03_Percentage.cs" />
+    <Compile Include="Tests\Controls\Test04_ProgressBar.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

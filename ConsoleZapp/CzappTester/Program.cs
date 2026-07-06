@@ -75,6 +75,13 @@ namespace CzappTester
                     Test03_Percentage.RendersValue();
                     break;
 
+                case 9:
+                    Cli.Init();
+                    Test04_ProgressBar.RendersFromFraction();
+                    Test04_ProgressBar.RendersFromPercent();
+                    Test04_ProgressBar.RendersEmptyAndFull();
+                    break;
+
                 default:
                     Console.WriteLine($"Test level ({testn}) is not defined");
                     break;
