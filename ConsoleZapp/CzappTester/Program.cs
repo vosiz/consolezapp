@@ -64,6 +64,12 @@ namespace CzappTester
                     Test01_LabeledControl.RendersWithoutUnit();
                     break;
 
+                case 7:
+                    Cli.Init();
+                    Test02_Progress.RendersWithoutUnit();
+                    Test02_Progress.RendersWithUnit();
+                    break;
+
                 default:
                     Console.WriteLine($"Test level ({testn}) is not defined");
                     break;
@@ -82,7 +88,7 @@ namespace CzappTester
         static void Main(string[] args)
         {
 
-            Test(5);
+            Test(6,7);
 
             Console.ReadLine();
         }

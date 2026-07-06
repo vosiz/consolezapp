@@ -52,6 +52,7 @@
     <Compile Include="Tests\Basic\Test04_PrintSafety.cs" />
     <Compile Include="Tests\Controls\Test00_Text.cs" />
     <Compile Include="Tests\Controls\Test01_LabeledControl.cs" />
+    <Compile Include="Tests\Controls\Test02_Progress.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
