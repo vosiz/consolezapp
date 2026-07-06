@@ -51,6 +51,7 @@
     <Compile Include="Tests\Basic\Test00_SimplePrint.cs" />
     <Compile Include="Tests\Basic\Test04_PrintSafety.cs" />
     <Compile Include="Tests\Controls\Test00_Text.cs" />
+    <Compile Include="Tests\Controls\Test01_LabeledControl.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

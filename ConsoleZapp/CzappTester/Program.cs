@@ -58,6 +58,12 @@ namespace CzappTester
                     Test00_Text.RendersFormattedText();
                     break;
 
+                case 6:
+                    Cli.Init();
+                    Test01_LabeledControl.RendersWithUnit();
+                    Test01_LabeledControl.RendersWithoutUnit();
+                    break;
+
                 default:
                     Console.WriteLine($"Test level ({testn}) is not defined");
                     break;
