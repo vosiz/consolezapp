@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ConsoleZapp;
 
-namespace CzappTester.Tests
+namespace CzappTester.Tests.Basic
 {
     public static class Test02_SimpleStruct
     {

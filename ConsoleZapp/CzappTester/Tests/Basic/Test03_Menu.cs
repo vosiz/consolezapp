@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CzappTester.Tests
+namespace CzappTester.Tests.Basic
 {
     public static class Test03_Menu
     {

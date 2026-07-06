@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CzappTester.Tests;
+using CzappTester.Tests.Basic;
+using CzappTester.Tests.Controls;
 using ConsoleZapp;
 
 
@@ -51,6 +52,12 @@ namespace CzappTester
                     Test04_PrintSafety.EscapeHelpers();
                     break;
 
+                case 5:
+                    Cli.Init();
+                    Test00_Text.RendersPlainText();
+                    Test00_Text.RendersFormattedText();
+                    break;
+
                 default:
                     Console.WriteLine($"Test level ({testn}) is not defined");
                     break;
@@ -69,7 +76,7 @@ namespace CzappTester
         static void Main(string[] args)
         {
 
-            Test(0, 1, 2, 4);
+            Test(5);
 
             Console.ReadLine();
         }
