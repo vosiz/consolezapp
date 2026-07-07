@@ -2,7 +2,7 @@ using ConsoleZapp;
 
 namespace CzappTester.Tests.Basic
 {
-    public static class Test04_PrintSafety
+    public static class PrintSafetyTests
     {
         public static void DoubleFormatFix()
         {

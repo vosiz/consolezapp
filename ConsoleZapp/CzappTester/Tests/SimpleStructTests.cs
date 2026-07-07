@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ConsoleZapp;
 
 namespace CzappTester.Tests.Basic
 {
-    public static class Test02_SimpleStruct
+    public static class SimpleStructTests
     {
         // line lvls
         public static void Lines() {

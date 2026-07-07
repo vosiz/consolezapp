@@ -45,16 +45,17 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tests\Basic\Test01_Coloring.cs" />
-    <Compile Include="Tests\Basic\Test03_Menu.cs" />
-    <Compile Include="Tests\Basic\Test02_SimpleStruct.cs" />
-    <Compile Include="Tests\Basic\Test00_SimplePrint.cs" />
-    <Compile Include="Tests\Basic\Test04_PrintSafety.cs" />
-    <Compile Include="Tests\Controls\Test00_Text.cs" />
-    <Compile Include="Tests\Controls\Test01_LabeledControl.cs" />
-    <Compile Include="Tests\Controls\Test02_Progress.cs" />
-    <Compile Include="Tests\Controls\Test03_Percentage.cs" />
-    <Compile Include="Tests\Controls\Test04_ProgressBar.cs" />
+    <Compile Include="Tests\Check.cs" />
+    <Compile Include="Tests\TestRunner.cs" />
+    <Compile Include="Tests\ColoringTests.cs" />
+    <Compile Include="Tests\SimpleStructTests.cs" />
+    <Compile Include="Tests\SimplePrintTests.cs" />
+    <Compile Include="Tests\PrintSafetyTests.cs" />
+    <Compile Include="Tests\Controls\TextTests.cs" />
+    <Compile Include="Tests\Controls\LabeledControlTests.cs" />
+    <Compile Include="Tests\Controls\ProgressTests.cs" />
+    <Compile Include="Tests\Controls\PercentageTests.cs" />
+    <Compile Include="Tests\Controls\ProgressBarTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
