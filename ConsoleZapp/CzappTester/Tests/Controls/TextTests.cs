@@ -1,3 +1,4 @@
+using System;
 using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
@@ -9,7 +10,8 @@ namespace CzappTester.Tests.Controls
             var text = new Text();
             text.SetText("Plain text, no formatting");
 
-            Cli.Print.WriteLine(text.Render());
+            text.Print();
+            Console.WriteLine();
         }
 
         public static void RendersFormattedText()
@@ -17,7 +19,8 @@ namespace CzappTester.Tests.Controls
             var text = new Text();
             text.SetText("Hello, {0}! Count: {1}", "world", 42);
 
-            Cli.Print.WriteLine(text.Render());
+            text.Print();
+            Console.WriteLine();
         }
     }
 }

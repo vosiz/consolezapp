@@ -1,3 +1,4 @@
+using System;
 using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
@@ -10,7 +11,8 @@ namespace CzappTester.Tests.Controls
             progress.SetCurrent(3);
             progress.SetTotal(10);
 
-            Cli.Print.WriteLine(progress.Render());
+            progress.Print();
+            Console.WriteLine();
         }
 
         public static void RendersWithUnit()
@@ -19,7 +21,8 @@ namespace CzappTester.Tests.Controls
             progress.SetCurrent(3);
             progress.SetTotal(10);
 
-            Cli.Print.WriteLine(progress.Render());
+            progress.Print();
+            Console.WriteLine();
         }
 
         public static void PartsDoneAddsToCurrent()
@@ -31,7 +34,8 @@ namespace CzappTester.Tests.Controls
             progress.PartsDone(2);
             progress.PartsDone(1);
 
-            Cli.Print.WriteLine(progress.Render());
+            progress.Print();
+            Console.WriteLine();
         }
     }
 }

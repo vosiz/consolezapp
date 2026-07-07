@@ -1,3 +1,5 @@
+using System;
+
 namespace ConsoleZapp
 {
     public class LabeledControl : IControl
@@ -28,6 +30,12 @@ namespace ConsoleZapp
                 rendered += $" {Unit}";
 
             return rendered;
+        }
+
+        // Writes the rendered content to the console
+        public void Print()
+        {
+            Console.Write(Render());
         }
     }
 }

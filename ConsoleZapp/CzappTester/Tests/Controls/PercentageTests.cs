@@ -1,3 +1,4 @@
+using System;
 using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
@@ -9,7 +10,8 @@ namespace CzappTester.Tests.Controls
             var percentage = new Percentage("Progress");
             percentage.SetValue(42);
 
-            Cli.Print.WriteLine(percentage.Render());
+            percentage.Print();
+            Console.WriteLine();
         }
 
         public static void RendersFromRatio()
@@ -17,7 +19,8 @@ namespace CzappTester.Tests.Controls
             var percentage = new Percentage("Progress");
             percentage.SetValue(0.5f);
 
-            Cli.Print.WriteLine(percentage.Render());
+            percentage.Print();
+            Console.WriteLine();
         }
 
         public static void RendersWithZeroDecimals()
@@ -57,7 +60,8 @@ namespace CzappTester.Tests.Controls
             var percentage = new Percentage("Progress");
             percentage.SetValue(0.00005f);
 
-            Cli.Print.WriteLine(percentage.Render());
+            percentage.Print();
+            Console.WriteLine();
         }
 
         public static void RendersSmallValueWithMicroPrefix()
@@ -65,7 +69,8 @@ namespace CzappTester.Tests.Controls
             var percentage = new Percentage("Progress");
             percentage.SetValue(0.000005f);
 
-            Cli.Print.WriteLine(percentage.Render());
+            percentage.Print();
+            Console.WriteLine();
         }
 
         public static void RendersLargeValueWithKiloPrefix()
@@ -73,7 +78,8 @@ namespace CzappTester.Tests.Controls
             var percentage = new Percentage("Progress");
             percentage.SetValue(15000);
 
-            Cli.Print.WriteLine(percentage.Render());
+            percentage.Print();
+            Console.WriteLine();
         }
     }
 }

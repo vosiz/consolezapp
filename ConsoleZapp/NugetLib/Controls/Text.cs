@@ -1,3 +1,5 @@
+using System;
+
 namespace ConsoleZapp
 {
     public class Text : IControl
@@ -17,6 +19,12 @@ namespace ConsoleZapp
         public string Render()
         {
             return Content;
+        }
+
+        // Writes the rendered content to the console
+        public void Print()
+        {
+            Console.Write(Render());
         }
     }
 }

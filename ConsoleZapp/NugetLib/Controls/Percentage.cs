@@ -1,3 +1,4 @@
+using System;
 using Commons = Vosiz.Commons;
 
 namespace ConsoleZapp
@@ -40,6 +41,12 @@ namespace ConsoleZapp
         {
             var quantity = new Commons.Quantity(Label, PercentUnit, Value);
             return $"{Label}: {quantity.ToString(decimals)}";
+        }
+
+        // Writes the rendered content to the console
+        public void Print()
+        {
+            Console.Write(Render());
         }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+
 namespace ConsoleZapp
 {
     public class Progress : IControl
@@ -40,6 +42,12 @@ namespace ConsoleZapp
                 rendered += $" {PartSymbol}";
 
             return rendered;
+        }
+
+        // Writes the rendered content to the console
+        public void Print()
+        {
+            Console.Write(Render());
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
@@ -9,7 +10,8 @@ namespace CzappTester.Tests.Controls
             var control = new LabeledControl("Velicina", "jednotek");
             control.SetValue("{0}", 25);
 
-            Cli.Print.WriteLine(control.Render());
+            control.Print();
+            Console.WriteLine();
         }
 
         public static void RendersWithoutUnit()
@@ -17,7 +19,8 @@ namespace CzappTester.Tests.Controls
             var control = new LabeledControl("Jmeno");
             control.SetValue("{0}", "Petr");
 
-            Cli.Print.WriteLine(control.Render());
+            control.Print();
+            Console.WriteLine();
         }
     }
 }
