@@ -2,7 +2,7 @@ using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
 {
-    public static class Test03_Percentage
+    public static class PercentageTests
     {
         public static void RendersValue()
         {

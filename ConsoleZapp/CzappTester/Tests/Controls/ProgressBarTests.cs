@@ -2,7 +2,7 @@ using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
 {
-    public static class Test04_ProgressBar
+    public static class ProgressBarTests
     {
         public static void RendersFromFraction()
         {

@@ -2,7 +2,7 @@ using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
 {
-    public static class Test00_Text
+    public static class TextTests
     {
         public static void RendersPlainText()
         {

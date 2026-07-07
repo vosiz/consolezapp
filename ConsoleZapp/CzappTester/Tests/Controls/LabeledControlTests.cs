@@ -2,7 +2,7 @@ using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
 {
-    public static class Test01_LabeledControl
+    public static class LabeledControlTests
     {
         public static void RendersWithUnit()
         {

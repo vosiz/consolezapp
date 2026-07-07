@@ -2,7 +2,7 @@ using ConsoleZapp;
 
 namespace CzappTester.Tests.Controls
 {
-    public static class Test02_Progress
+    public static class ProgressTests
     {
         public static void RendersWithoutUnit()
         {
