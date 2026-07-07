@@ -1,10 +1,15 @@
+using Commons = Vosiz.Commons;
+
 namespace ConsoleZapp
 {
     public class Percentage : IControl
     {
-        private readonly string Label;
+        private static readonly Commons.Unit PercentUnit = 
+            new Commons.Unit("%", Commons.UnitSymbolPlacement.AfterWithSpace, true);
 
-        public int Value { get; private set; }
+        public float Value { get; private set; }
+
+        private readonly string Label;
 
         // Constructor with label
         public Percentage(string label)
@@ -12,16 +17,29 @@ namespace ConsoleZapp
             Label = label;
         }
 
-        // Sets percent value
+        // Sets percent value (0-100)
         public void SetValue(int percent)
         {
             Value = percent;
         }
 
-        // Renders control content
+        // Sets percent value from a 0.0f-1.0f ratio
+        public void SetValue(float ratio)
+        {
+            Value = ratio * 100f;
+        }
+
+        // Renders control content, whole numbers
         public string Render()
         {
-            return $"{Label}: {Value}%";
+            return Render(0);
+        }
+
+        // Renders control content with given decimal places
+        public string Render(int decimals)
+        {
+            var quantity = new Commons.Quantity(Label, PercentUnit, Value);
+            return $"{Label}: {quantity.ToString(decimals)}";
         }
     }
 }
