@@ -1,11 +1,20 @@
 # Change log
 ## Current version
+### 1.2.1 - Controls
+- addition: Text, LabeledControl controls
+- addition: Progress, Percentage controls
+- addition: ProgressBar control with colors
+- addition: IControl.Print()
+- dependency: Vosiz.UtilsLib
+
+## History
+### 1.2.0 - Test rework
+- rework: CzappTester reflection-based runner
+
 ### 1.1.0 - Print safety
 - fix: Sprintf double format
 - addition: PrintException
 - addition: StringExt escapes
-
-## History
 ### 1.0.8 - Version cleanup
 - fix: version cleanup
 - docs: README methods

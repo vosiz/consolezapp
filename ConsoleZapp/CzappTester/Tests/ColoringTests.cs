@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ConsoleZapp;
 
-namespace CzappTester.Tests
+namespace CzappTester.Tests.Basic
 {
-    public static class Test01_Coloring
+    public static class ColoringTests
     {
 
         public static void ColorOnce() {
