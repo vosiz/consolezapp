@@ -1,77 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using CzappTester.Tests;
 using ConsoleZapp;
-
 
 namespace CzappTester
 {
     class Program
     {
-
-        static void RunTest(int testn) {
-
-            switch (testn) {
-
-                case 0:
-                    Cli.Init();
-                    Test00_SimplePrint.Write("test");
-                    Test00_SimplePrint.WriteNl("test NL");
-                    Test00_SimplePrint.WriteNl("int {0} as string", 123);
-                    break;
-
-                case 1:
-                    Cli.Init();
-                    Test01_Coloring.ColorOnce();
-                    Test01_Coloring.Classics();
-                    Test01_Coloring.Custom();
-                    break;
-
-                case 2:
-                    Cli.Init();
-                    Test02_SimpleStruct.Lines();
-                    Test02_SimpleStruct.HeadLines();
-                    Test02_SimpleStruct.CustomLines();
-                    Test02_SimpleStruct.CustomHeadlines();
-                    break;
-
-                case 3:
-                    Cli.Init();
-                    // TODO
-                    break;
-
-                case 4:
-                    Cli.Init();
-                    Test04_PrintSafety.DoubleFormatFix();
-                    Test04_PrintSafety.LegitFormatStillWorks();
-                    Test04_PrintSafety.ThrowsPrintException();
-                    Test04_PrintSafety.EscapeHelpers();
-                    break;
-
-                default:
-                    Console.WriteLine($"Test level ({testn}) is not defined");
-                    break;
-            }
-        }
-
-        static void Test(params int[] nums) {
-
-            foreach (var n in nums) {
-
-                RunTest(n);
-            }
-        }
-
         // MAIN
         static void Main(string[] args)
         {
 
-            Test(0, 1, 2, 4);
+            Cli.Init();
 
-            Console.ReadLine();
+            TestRunner.RunAll(Assembly.GetExecutingAssembly());
+
+            System.Console.ReadLine();
         }
     }
 }

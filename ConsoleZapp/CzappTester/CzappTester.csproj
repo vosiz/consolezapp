@@ -45,11 +45,12 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tests\Test01_Coloring.cs" />
-    <Compile Include="Tests\Test03_Menu.cs" />
-    <Compile Include="Tests\Test02_SimpleStruct.cs" />
-    <Compile Include="Tests\Test00_SimplePrint.cs" />
-    <Compile Include="Tests\Test04_PrintSafety.cs" />
+    <Compile Include="Tests\Check.cs" />
+    <Compile Include="Tests\TestRunner.cs" />
+    <Compile Include="Tests\ColoringTests.cs" />
+    <Compile Include="Tests\SimpleStructTests.cs" />
+    <Compile Include="Tests\SimplePrintTests.cs" />
+    <Compile Include="Tests\PrintSafetyTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
