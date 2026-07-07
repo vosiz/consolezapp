@@ -21,5 +21,17 @@ namespace CzappTester.Tests.Controls
 
             Cli.Print.WriteLine(progress.Render());
         }
+
+        public static void PartsDoneAddsToCurrent()
+        {
+            var progress = new Progress("MB");
+            progress.SetTotal(10);
+            progress.SetCurrent(3);
+
+            progress.PartsDone(2);
+            progress.PartsDone(1);
+
+            Cli.Print.WriteLine(progress.Render());
+        }
     }
 }

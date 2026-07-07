@@ -2,15 +2,15 @@ namespace ConsoleZapp
 {
     public class Progress : IControl
     {
-        private readonly string Unit;
+        private readonly string PartSymbol;
 
         public int Current { get; private set; }
         public int Total { get; private set; }
 
-        // Constructor with optional unit
-        public Progress(string unit = null)
+        // Constructor with optional part symbol
+        public Progress(string part_symbol = null)
         {
-            Unit = unit;
+            PartSymbol = part_symbol;
         }
 
         // Sets current value
@@ -25,13 +25,19 @@ namespace ConsoleZapp
             Total = total;
         }
 
+        // Adds a number of finished parts to Current
+        public void PartsDone(int count)
+        {
+            Current += count;
+        }
+
         // Renders control content
         public string Render()
         {
             var rendered = $"{Current}/{Total}";
 
-            if (!string.IsNullOrEmpty(Unit))
-                rendered += $" {Unit}";
+            if (!string.IsNullOrEmpty(PartSymbol))
+                rendered += $" {PartSymbol}";
 
             return rendered;
         }
