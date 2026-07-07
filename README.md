@@ -13,6 +13,7 @@ No tracked
 - [x] Custom headlines
 - [ ] Menu
 - [ ] Customized menu
+- [x] Controls - line based basics (perc, label, text, ratio,...)
 
 ## Manual
 See testing project for more referenes
