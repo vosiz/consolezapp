@@ -1,6 +1,6 @@
 using ConsoleZapp;
 
-namespace CzappTester.Tests
+namespace CzappTester.Tests.Basic
 {
     public static class ColoringTests
     {

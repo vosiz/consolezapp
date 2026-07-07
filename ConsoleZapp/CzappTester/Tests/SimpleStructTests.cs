@@ -1,7 +1,7 @@
 using System.Linq;
 using ConsoleZapp;
 
-namespace CzappTester.Tests
+namespace CzappTester.Tests.Basic
 {
     public static class SimpleStructTests
     {
