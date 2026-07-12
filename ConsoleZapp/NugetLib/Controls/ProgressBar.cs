@@ -3,7 +3,7 @@ using Commons = Vosiz.Commons;
 
 namespace ConsoleZapp
 {
-    public class ProgressBar : IControl
+    public class ProgressBar : Control
     {
         private static readonly Commons.Unit PercentUnit = new Commons.Unit("%", Commons.UnitSymbolPlacement.AfterWithSpace, true);
 
@@ -16,7 +16,6 @@ namespace ConsoleZapp
         public BarColor FullColor { get; private set; } = BarColor.White;
 
         private readonly string Label;
-        private readonly int Width;
 
         private int Margin = 1;
         private char EmptyChar = ' ';
@@ -34,7 +33,7 @@ namespace ConsoleZapp
         public ProgressBar(string label, int width = 80)
         {
             Label = label;
-            Width = width;
+            SetWidth(width);
         }
 
         // Sets progress using a 0f-1f fraction
@@ -104,13 +103,13 @@ namespace ConsoleZapp
         }
 
         // Renders control content
-        public string Render()
+        public override string Render()
         {
             var percent = (int)Math.Round(Progress * 100);
             var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(0);
 
             var fixed_length = (Margin * 2) + Label.Length + 4 + percent_text.Length;
-            var bar_width = Width - fixed_length;
+            var bar_width = Math.Max(0, Width - fixed_length);
 
             var fill_length = (int)Math.Round(bar_width * Progress);
             var empty_length = bar_width - fill_length;
@@ -122,13 +121,13 @@ namespace ConsoleZapp
         }
 
         // Renders and writes the bar directly to the console, applying per-segment colors
-        public void Print()
+        public override void Print()
         {
             var percent = (int)Math.Round(Progress * 100);
             var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(0);
 
             var fixed_length = (Margin * 2) + Label.Length + 4 + percent_text.Length;
-            var bar_width = Width - fixed_length;
+            var bar_width = Math.Max(0, Width - fixed_length);
 
             var fill_length = (int)Math.Round(bar_width * Progress);
             var empty_length = bar_width - fill_length;

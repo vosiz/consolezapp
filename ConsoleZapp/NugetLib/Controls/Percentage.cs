@@ -1,9 +1,8 @@
-using System;
 using Commons = Vosiz.Commons;
 
 namespace ConsoleZapp
 {
-    public class Percentage : IControl
+    public class Percentage : Control
     {
         private static readonly Commons.Unit PercentUnit = 
             new Commons.Unit("%", Commons.UnitSymbolPlacement.AfterWithSpace, true);
@@ -31,7 +30,7 @@ namespace ConsoleZapp
         }
 
         // Renders control content, whole numbers
-        public string Render()
+        public override string Render()
         {
             return Render(0);
         }
@@ -41,12 +40,6 @@ namespace ConsoleZapp
         {
             var quantity = new Commons.Quantity(Label, PercentUnit, Value);
             return $"{Label}: {quantity.ToString(decimals)}";
-        }
-
-        // Writes the rendered content to the console
-        public void Print()
-        {
-            Console.Write(Render());
         }
     }
 }

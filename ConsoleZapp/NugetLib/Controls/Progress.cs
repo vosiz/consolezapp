@@ -1,8 +1,6 @@
-using System;
-
 namespace ConsoleZapp
 {
-    public class Progress : IControl
+    public class Progress : Control
     {
         private readonly string PartSymbol;
 
@@ -34,7 +32,7 @@ namespace ConsoleZapp
         }
 
         // Renders control content
-        public string Render()
+        public override string Render()
         {
             var rendered = $"{Current}/{Total}";
 
@@ -42,12 +40,6 @@ namespace ConsoleZapp
                 rendered += $" {PartSymbol}";
 
             return rendered;
-        }
-
-        // Writes the rendered content to the console
-        public void Print()
-        {
-            Console.Write(Render());
         }
     }
 }

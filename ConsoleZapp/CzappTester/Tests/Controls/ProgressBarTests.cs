@@ -65,6 +65,47 @@ namespace CzappTester.Tests.Controls
             Cli.Print.WriteLine("[{0}] length {1}", bar.Render(), bar.Render().Length);
         }
 
+        public static void AdjustsWidthAfterConstruction()
+        {
+            var bar = new ProgressBar("Adjustable");
+            bar.SetProgress(0.5f);
+
+            Cli.Print.WriteLine("[{0}] length {1}", bar.Render(), bar.Render().Length);
+
+            bar.SetWidth(60);
+            Cli.Print.WriteLine("[{0}] length {1}", bar.Render(), bar.Render().Length);
+
+            bar.SetWidth(40);
+            Cli.Print.WriteLine("[{0}] length {1}", bar.Render(), bar.Render().Length);
+        }
+
+        public static void ClampsWidthToSaneRange()
+        {
+            // Below Control.MinWidth (40) should clamp up
+            var narrow = new ProgressBar("Narrow", 10);
+            narrow.SetProgress(0.5f);
+            Cli.Print.WriteLine("[{0}] length {1}", narrow.Render(), narrow.Render().Length);
+
+            // Above Control.MaxWidth (120) should clamp down
+            var wide = new ProgressBar("Wide", 500);
+            wide.SetProgress(0.5f);
+            Cli.Print.WriteLine("[{0}] length {1}", wide.Render(), wide.Render().Length);
+
+            // SetWidth after construction is clamped the same way
+            var adjusted = new ProgressBar("Adjusted");
+            adjusted.SetProgress(0.5f);
+            adjusted.SetWidth(5);
+            Cli.Print.WriteLine("[{0}] length {1}", adjusted.Render(), adjusted.Render().Length);
+        }
+
+        public static void DoesNotCrashWhenLabelExceedsWidth()
+        {
+            var bar = new ProgressBar("A very long label that eats up all the space", Control.MinWidth);
+            bar.SetProgress(0.5f);
+
+            Cli.Print.WriteLine("[{0}] length {1}", bar.Render(), bar.Render().Length);
+        }
+
         public static void SetsColors()
         {
             var bar = new ProgressBar("Colors");

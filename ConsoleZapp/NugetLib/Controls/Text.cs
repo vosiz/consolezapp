@@ -1,8 +1,6 @@
-using System;
-
 namespace ConsoleZapp
 {
-    public class Text : IControl
+    public class Text : Control
     {
         private string Content;
 
@@ -16,15 +14,9 @@ namespace ConsoleZapp
         }
 
         // Renders control content
-        public string Render()
+        public override string Render()
         {
             return Content;
-        }
-
-        // Writes the rendered content to the console
-        public void Print()
-        {
-            Console.Write(Render());
         }
     }
 }
