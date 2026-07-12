@@ -1,8 +1,6 @@
-using System;
-
 namespace ConsoleZapp
 {
-    public class LabeledControl : IControl
+    public class LabeledControl : Control
     {
         private readonly string Label;
         private readonly string Unit;
@@ -22,7 +20,7 @@ namespace ConsoleZapp
         }
 
         // Renders control content
-        public string Render()
+        public override string Render()
         {
             var rendered = $"{Label}: {ValueText.Render()}";
 
@@ -30,12 +28,6 @@ namespace ConsoleZapp
                 rendered += $" {Unit}";
 
             return rendered;
-        }
-
-        // Writes the rendered content to the console
-        public void Print()
-        {
-            Console.Write(Render());
         }
     }
 }
