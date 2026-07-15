@@ -29,6 +29,12 @@ namespace ConsoleZapp
             return Controls.TryGetValue(name, out var control) ? control : null;
         }
 
+        // Returns the total row count this container takes up when printed (borders + one row per control)
+        public int GetHeight()
+        {
+            return 2 + Controls.Count;
+        }
+
         // Prints the container as a bordered box, one control per row
         public void Print(int width)
         {

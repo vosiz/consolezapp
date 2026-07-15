@@ -24,6 +24,17 @@ namespace ConsoleZapp
             return Containers[container_id].GetControl(name);
         }
 
+        // Returns the total row count all containers take up when printed, stacked vertically
+        public int GetHeight()
+        {
+            var height = 0;
+
+            foreach (var container in Containers.Values)
+                height += container.GetHeight();
+
+            return height;
+        }
+
         // Prints all containers to the console, stacked vertically
         public void Print(int width)
         {

@@ -1,3 +1,5 @@
+using System;
+
 namespace ConsoleZapp
 {
     public class Tui
@@ -14,10 +16,21 @@ namespace ConsoleZapp
             Width = width;
         }
 
-        // Prints the header to the console
+        // Prints the header to the console and sets up the body's scrolling area below it
         public void Print()
         {
+            // Header/Body row tracking assumes the header starts at absolute row 0 - clearing
+            // first guarantees that, regardless of whatever was on screen before this call.
+            Console.Clear();
+
             Header.Print(Width);
+            Body?.Init(Header.GetHeight());
+        }
+
+        // Writes a formatted line to the body's scrolling area, if a body is set
+        public void WriteLine(string fmt, params object[] args)
+        {
+            Body?.WriteLine(fmt, args);
         }
 
         // Prints the body prompt and reads a command, if a body is set
