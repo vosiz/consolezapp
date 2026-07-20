@@ -27,6 +27,12 @@ namespace ConsoleZapp
             Body?.Init(Header.GetHeight());
         }
 
+        // Re-renders a single header control in place, defaults to "main" container
+        public void UpdateControl(string name, string container_id = "main")
+        {
+            Header.UpdateControl(name, container_id);
+        }
+
         // Writes a formatted line to the body's scrolling area, if a body is set
         public void WriteLine(string fmt, params object[] args)
         {
