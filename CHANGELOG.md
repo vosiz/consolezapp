@@ -1,10 +1,13 @@
 # Change log
 ## Current version
+### 1.4.2 - Colored Body output
+- addition: Body.WriteLine colored overload
+- addition: Tui.WriteLine colored overload
+
+## History
 ### 1.4.1 - Percent precision
 - addition: ProgressBar SetDecimals
 - cleanup: remove CzappTester Tui tests
-
-## History
 ### 1.4.0 - Tui module
 - addition: Header, Container, Tui
 - addition: Body ReadCommand prompt
