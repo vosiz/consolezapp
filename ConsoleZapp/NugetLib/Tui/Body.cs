@@ -33,7 +33,7 @@ namespace ConsoleZapp
             PrepareRow();
 
             Console.SetCursorPosition(0, CurrentRow);
-            Console.Write(string.Format(fmt, args));
+            Console.Write(ClampToWindowWidth(string.Format(fmt, args)));
 
             CurrentRow++;
         }
@@ -47,7 +47,7 @@ namespace ConsoleZapp
 
             Console.ForegroundColor = (ConsoleColor)fg;
             Console.BackgroundColor = (ConsoleColor)bg;
-            Console.Write(string.Format(fmt, args));
+            Console.Write(ClampToWindowWidth(string.Format(fmt, args)));
             Console.ResetColor();
 
             CurrentRow++;
@@ -66,6 +66,21 @@ namespace ConsoleZapp
             CurrentRow++;
 
             return command;
+        }
+
+        // Truncates text that would overflow the window width, avoiding a native wrap/scroll on write
+        private static string ClampToWindowWidth(string text)
+        {
+            const string ellipsis = "...";
+
+            var max_length = Console.WindowWidth - 1;
+
+            if (text.Length <= max_length)
+                return text;
+
+            var content_length = Math.Max(0, max_length - ellipsis.Length);
+
+            return text.Substring(0, content_length) + ellipsis;
         }
 
         // Scrolls the scrolling area up by one row if the cursor has reached the bottom of the window
