@@ -18,6 +18,7 @@ namespace ConsoleZapp
         private readonly string Label;
 
         private int Margin = 1;
+        private int Decimals = 0;
         private char EmptyChar = ' ';
         private char FullChar = '■';
 
@@ -58,6 +59,12 @@ namespace ConsoleZapp
         public void SetMargin(int margin)
         {
             Margin = margin;
+        }
+
+        // Sets the number of decimal places shown in the percent text
+        public void SetDecimals(int decimals)
+        {
+            Decimals = decimals;
         }
 
         // Sets the character used for the empty portion of the bar
@@ -105,8 +112,8 @@ namespace ConsoleZapp
         // Renders control content
         public override string Render()
         {
-            var percent = (int)Math.Round(Progress * 100);
-            var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(0);
+            var percent = Progress * 100f;
+            var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(Decimals);
 
             var fixed_length = (Margin * 2) + Label.Length + 4 + percent_text.Length;
             var bar_width = Math.Max(0, Width - fixed_length);
@@ -123,8 +130,8 @@ namespace ConsoleZapp
         // Renders and writes the bar directly to the console, applying per-segment colors
         public override void Print()
         {
-            var percent = (int)Math.Round(Progress * 100);
-            var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(0);
+            var percent = Progress * 100f;
+            var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(Decimals);
 
             var fixed_length = (Margin * 2) + Label.Length + 4 + percent_text.Length;
             var bar_width = Math.Max(0, Width - fixed_length);
