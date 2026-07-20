@@ -1,13 +1,16 @@
 # Change log
 ## Current version
+### 1.4.1 - Percent precision
+- addition: ProgressBar SetDecimals
+- cleanup: remove CzappTester Tui tests
+
+## History
 ### 1.4.0 - Tui module
 - addition: Header, Container, Tui
 - addition: Body ReadCommand prompt
 - addition: Body WriteLine scrolling
 - fix: native scroll on Enter at bottom row
 - fix: Tui.Print() clears, anchors header
-
-## History
 ### 1.3.0 - Control base class
 - rework: IControl -> abstract Control
 - addition: SetWidth() with min/max clamp
