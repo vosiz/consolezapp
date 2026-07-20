@@ -33,6 +33,12 @@ namespace ConsoleZapp
             Body?.WriteLine(fmt, args);
         }
 
+        // Writes a formatted line in the given colors to the body's scrolling area, if a body is set
+        public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
+        {
+            Body?.WriteLine(fg, bg, fmt, args);
+        }
+
         // Prints the body prompt and reads a command, if a body is set
         public string ReadCommand()
         {

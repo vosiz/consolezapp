@@ -38,6 +38,21 @@ namespace ConsoleZapp
             CurrentRow++;
         }
 
+        // Writes a formatted line in the given colors into the scrolling area, scrolling the area up if needed
+        public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
+        {
+            PrepareRow();
+
+            Console.SetCursorPosition(0, CurrentRow);
+
+            Console.ForegroundColor = (ConsoleColor)fg;
+            Console.BackgroundColor = (ConsoleColor)bg;
+            Console.Write(string.Format(fmt, args));
+            Console.ResetColor();
+
+            CurrentRow++;
+        }
+
         // Prints the prompt and reads a command line from the console, scrolling the area up if needed
         public string ReadCommand()
         {
