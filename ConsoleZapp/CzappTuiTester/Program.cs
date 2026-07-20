@@ -35,7 +35,7 @@ namespace CzappTuiTester
                 command = tui.ReadCommand();
 
                 if (command != ExitCommand)
-                    tui.WriteLine("You said: {0}", command);
+                    tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);
 
             } while (command != ExitCommand);
         }
