@@ -11,6 +11,9 @@ namespace ConsoleZapp
 
         private readonly Dictionary<string, Control> Controls = new Dictionary<string, Control>();
 
+        private int TopRow;
+        private int Width;
+
         // Constructor
         public Container()
         {
@@ -38,6 +41,9 @@ namespace ConsoleZapp
         // Prints the container as a bordered box, one control per row
         public void Print(int width)
         {
+            TopRow = Console.CursorTop;
+            Width = width;
+
             PrintBorder(width);
 
             foreach (var control in Controls.Values)
@@ -49,6 +55,34 @@ namespace ConsoleZapp
             PrintBorder(width);
         }
 
+        // Re-renders a single control's row in place, leaving borders and every other row untouched
+        public void UpdateControl(string name)
+        {
+            if (!Controls.TryGetValue(name, out var control))
+                return;
+
+            var row_index = GetControlRowIndex(name);
+
+            Console.SetCursorPosition(0, TopRow + 1 + row_index);
+            Console.Write(FormatRow(control.Render(), Width));
+        }
+
+        // Finds a control's row position within this container, based on add order
+        private int GetControlRowIndex(string name)
+        {
+            var index = 0;
+
+            foreach (var key in Controls.Keys)
+            {
+                if (key == name)
+                    return index;
+
+                index++;
+            }
+
+            return -1;
+        }
+
         // Prints a horizontal border line
         private void PrintBorder(int width)
         {
@@ -58,9 +92,15 @@ namespace ConsoleZapp
         // Prints a single content row padded to the container width
         private void PrintRow(string content, int width)
         {
+            Console.WriteLine(FormatRow(content, width));
+        }
+
+        // Formats a single content row, padded and wrapped in border characters
+        private string FormatRow(string content, int width)
+        {
             var padded = content.PadRight(width - 4);
 
-            Console.WriteLine($"{BorderVertical} {padded} {BorderVertical}");
+            return $"{BorderVertical} {padded} {BorderVertical}";
         }
     }
 }

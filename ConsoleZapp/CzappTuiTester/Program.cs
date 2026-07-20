@@ -33,6 +33,8 @@ namespace CzappTuiTester
 
             string command;
 
+            var progress = (Progress)header.GetControl("progress");
+
             do
             {
                 command = tui.ReadCommand();
@@ -41,6 +43,13 @@ namespace CzappTuiTester
                     tui.WriteLine("Overflow test: {0}", new string('X', 200));
                 else if (command != ExitCommand)
                     tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);
+
+                // Live header update test: bump the command count in place, without reprinting the header
+                if (command != ExitCommand)
+                {
+                    progress.PartsDone(1);
+                    tui.UpdateControl("progress");
+                }
 
             } while (command != ExitCommand);
         }
