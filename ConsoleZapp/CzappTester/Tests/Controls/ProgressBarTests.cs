@@ -51,6 +51,20 @@ namespace CzappTester.Tests.Controls
             Cli.Print.WriteLine(bar.Render());
         }
 
+        public static void RendersWithDecimalPercent()
+        {
+            var bar = new ProgressBar("Precise");
+            bar.SetProgress(0.3333f);
+            bar.SetDecimals(2);
+
+            Cli.Print.WriteLine(bar.Render());
+
+            var default_bar = new ProgressBar("Default");
+            default_bar.SetProgress(0.3333f);
+
+            Cli.Print.WriteLine(default_bar.Render());
+        }
+
         public static void RendersAtFixedWidthAcrossPercentDigits()
         {
             var bar = new ProgressBar("Width", 40);

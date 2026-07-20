@@ -1,13 +1,22 @@
 # Change log
 ## Current version
+### 1.4.3 - Overflow truncation
+- addition: Body.WriteLine clamps to window width
+- addition: ellipsis marker on truncated lines
+
+## History
+### 1.4.2 - Colored Body output
+- addition: Body.WriteLine colored overload
+- addition: Tui.WriteLine colored overload
+### 1.4.1 - Percent precision
+- addition: ProgressBar SetDecimals
+- cleanup: remove CzappTester Tui tests
 ### 1.4.0 - Tui module
 - addition: Header, Container, Tui
 - addition: Body ReadCommand prompt
 - addition: Body WriteLine scrolling
 - fix: native scroll on Enter at bottom row
 - fix: Tui.Print() clears, anchors header
-
-## History
 ### 1.3.0 - Control base class
 - rework: IControl -> abstract Control
 - addition: SetWidth() with min/max clamp
