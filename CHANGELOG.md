@@ -1,10 +1,13 @@
 # Change log
 ## Current version
+### 1.5.0 - Live header update
+- addition: Container.UpdateControl
+- addition: Header/Tui UpdateControl forwarding
+
+## History
 ### 1.4.3 - Overflow truncation
 - addition: Body.WriteLine clamps to window width
 - addition: ellipsis marker on truncated lines
-
-## History
 ### 1.4.2 - Colored Body output
 - addition: Body.WriteLine colored overload
 - addition: Tui.WriteLine colored overload

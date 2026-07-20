@@ -24,6 +24,12 @@ namespace ConsoleZapp
             return Containers[container_id].GetControl(name);
         }
 
+        // Re-renders a single control's row in place, defaults to "main" container
+        public void UpdateControl(string name, string container_id = "main")
+        {
+            Containers[container_id].UpdateControl(name);
+        }
+
         // Returns the total row count all containers take up when printed, stacked vertically
         public int GetHeight()
         {
