@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Vosiz.UtilsLib" Version="1.6.0" />
+    <PackageReference Include="Vosiz.UtilsLib" Version="2.2.0" />
   </ItemGroup>
 
 </Project>
