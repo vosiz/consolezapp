@@ -30,6 +30,18 @@ namespace ConsoleZapp
             Containers[container_id].UpdateControl(name);
         }
 
+        // Overrides the border characters of the given container, defaults to "main"
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
+        {
+            Containers[container_id].SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right);
+        }
+
+        // Sets the border color of the given container, defaults to "main"
+        public void SetBorderColor(Cli.Conclr fg, Cli.Conclr bg, string container_id = "main")
+        {
+            Containers[container_id].SetBorderColor(fg, bg);
+        }
+
         // Returns the total row count all containers take up when printed, stacked vertically
         public int GetHeight()
         {

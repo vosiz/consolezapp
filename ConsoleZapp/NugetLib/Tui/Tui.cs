@@ -34,6 +34,18 @@ namespace ConsoleZapp
             Header.UpdateControl(name, container_id);
         }
 
+        // Overrides the border characters of the given header container, defaults to "main"
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
+        {
+            Header.SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right, container_id);
+        }
+
+        // Sets the border color of the given header container, defaults to "main"
+        public void SetBorderColor(Cli.Conclr fg, Cli.Conclr bg, string container_id = "main")
+        {
+            Header.SetBorderColor(fg, bg, container_id);
+        }
+
         // Writes a formatted line to the body's scrolling area, if a body is set
         public void WriteLine(string fmt, params object[] args)
         {
