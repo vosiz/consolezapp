@@ -13,9 +13,9 @@
     <PackageProjectUrl>https://github.com/vosiz/consolezapp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/vosiz/consolezapp</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.5.0</Version>
-    <AssemblyVersion>1.5.0.0</AssemblyVersion>
-    <FileVersion>1.5.0.0</FileVersion>
+    <Version>1.6.0</Version>
+    <AssemblyVersion>1.6.0.0</AssemblyVersion>
+    <FileVersion>1.6.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Vosiz.UtilsLib" Version="1.6.0" />
+    <PackageReference Include="Vosiz.UtilsLib" Version="2.2.0" />
   </ItemGroup>
 
 </Project>

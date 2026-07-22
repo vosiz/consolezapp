@@ -1,10 +1,21 @@
 # Change log
 ## Current version
+### 1.6.0 - Control, prompt and border coloring
+- addition: Control.SetColor, SetFillRowBackground
+- addition: RichText control (per-part coloring)
+- addition: Body/Tui WriteLine(Part[])
+- addition: Body.SetPromptColor
+- addition: Body.AddKeywordColor
+- addition: Body.RecolorLastInput
+- addition: Container.SetBorderChars
+- addition: Container.SetBorderColor
+- change: Unicode box-drawing border default
+
+## History
 ### 1.5.0 - Live header update
 - addition: Container.UpdateControl
 - addition: Header/Tui UpdateControl forwarding
 
-## History
 ### 1.4.3 - Overflow truncation
 - addition: Body.WriteLine clamps to window width
 - addition: ellipsis marker on truncated lines
