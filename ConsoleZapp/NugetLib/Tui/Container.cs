@@ -5,9 +5,15 @@ namespace ConsoleZapp
 {
     public class Container
     {
-        private const char BorderHorizontal = '-';
-        private const char BorderVertical = '|';
-        private const char BorderCorner = '+';
+        private char BorderHorizontal = '─';
+        private char BorderVertical = '│';
+        private char BorderTopLeft = '┌';
+        private char BorderTopRight = '┐';
+        private char BorderBottomLeft = '└';
+        private char BorderBottomRight = '┘';
+
+        private Cli.Conclr? BorderForeground;
+        private Cli.Conclr? BorderBackground;
 
         private readonly Dictionary<string, Control> Controls = new Dictionary<string, Control>();
 
@@ -32,6 +38,24 @@ namespace ConsoleZapp
             return Controls.TryGetValue(name, out var control) ? control : null;
         }
 
+        // Overrides the border characters used when printing this container, replacing the Unicode box-drawing default
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right)
+        {
+            BorderHorizontal = horizontal;
+            BorderVertical = vertical;
+            BorderTopLeft = top_left;
+            BorderTopRight = top_right;
+            BorderBottomLeft = bottom_left;
+            BorderBottomRight = bottom_right;
+        }
+
+        // Sets the color the border (corners, edges) is printed in
+        public void SetBorderColor(Cli.Conclr fg, Cli.Conclr bg)
+        {
+            BorderForeground = fg;
+            BorderBackground = bg;
+        }
+
         // Returns the total row count this container takes up when printed (borders + one row per control)
         public int GetHeight()
         {
@@ -44,7 +68,7 @@ namespace ConsoleZapp
             TopRow = Console.CursorTop;
             Width = width;
 
-            PrintBorder(width);
+            PrintBorder(width, is_top: true);
 
             foreach (var control in Controls.Values)
             {
@@ -52,7 +76,7 @@ namespace ConsoleZapp
                 PrintRow(control, width);
             }
 
-            PrintBorder(width);
+            PrintBorder(width, is_top: false);
         }
 
         // Re-renders a single control's row in place, leaving borders and every other row untouched
@@ -83,10 +107,14 @@ namespace ConsoleZapp
             return -1;
         }
 
-        // Prints a horizontal border line
-        private void PrintBorder(int width)
+        // Prints a horizontal border line, picking corner chars based on whether it's the top or bottom edge
+        private void PrintBorder(int width, bool is_top)
         {
-            Console.WriteLine(BorderCorner + new string(BorderHorizontal, width - 2) + BorderCorner);
+            var left_corner = is_top ? BorderTopLeft : BorderBottomLeft;
+            var right_corner = is_top ? BorderTopRight : BorderBottomRight;
+
+            WriteBorderText(left_corner + new string(BorderHorizontal, width - 2) + right_corner);
+            Console.WriteLine();
         }
 
         // Prints a single control's row padded to the container width, then moves to the next line
@@ -99,7 +127,7 @@ namespace ConsoleZapp
         // Writes a single control's row at the current cursor position, coloring each part per its own setting
         private void WriteRow(Control control, int width)
         {
-            Console.Write(BorderVertical);
+            WriteBorderText(BorderVertical.ToString());
             Console.Write(' ');
 
             var written = 0;
@@ -136,7 +164,24 @@ namespace ConsoleZapp
                 Console.ResetColor();
 
             Console.Write(' ');
-            Console.Write(BorderVertical);
+            WriteBorderText(BorderVertical.ToString());
+        }
+
+        // Writes text in the border color, if set, resetting afterwards
+        private void WriteBorderText(string text)
+        {
+            var has_color = BorderForeground.HasValue;
+
+            if (has_color)
+            {
+                Console.ForegroundColor = (ConsoleColor)BorderForeground.Value;
+                Console.BackgroundColor = (ConsoleColor)BorderBackground.Value;
+            }
+
+            Console.Write(text);
+
+            if (has_color)
+                Console.ResetColor();
         }
     }
 }

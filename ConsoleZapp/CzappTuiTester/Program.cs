@@ -131,6 +131,9 @@ namespace CzappTuiTester
             var body = new Body();
             var tui = new Tui(header, body, Width);
 
+            // Border color test: header box border (corners, edges) drawn in red
+            tui.SetBorderColor(Cli.Conclr.Red, Cli.Conclr.DefBg);
+
             // Colored prompt test: prompt itself is orange, typed-in text stays the console's normal color
             tui.SetPromptColor(Cli.Conclr.Yellowd, Cli.Conclr.DefBg);
 
