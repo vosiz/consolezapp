@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ConsoleZapp
 {
@@ -49,6 +50,32 @@ namespace ConsoleZapp
             Console.BackgroundColor = (ConsoleColor)bg;
             Console.Write(ClampToWindowWidth(string.Format(fmt, args)));
             Console.ResetColor();
+
+            CurrentRow++;
+        }
+
+        // Writes a line built from independently colored parts into the scrolling area, scrolling the area up if needed
+        public void WriteLine(IEnumerable<Part> parts)
+        {
+            PrepareRow();
+
+            Console.SetCursorPosition(0, CurrentRow);
+
+            foreach (var part in parts)
+            {
+                var has_color = part.Foreground.HasValue;
+
+                if (has_color)
+                {
+                    Console.ForegroundColor = (ConsoleColor)part.Foreground.Value;
+                    Console.BackgroundColor = (ConsoleColor)part.Background.Value;
+                }
+
+                Console.Write(part.Text);
+
+                if (has_color)
+                    Console.ResetColor();
+            }
 
             CurrentRow++;
         }

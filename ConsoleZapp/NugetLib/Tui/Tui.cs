@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ConsoleZapp
 {
@@ -43,6 +44,12 @@ namespace ConsoleZapp
         public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
         {
             Body?.WriteLine(fg, bg, fmt, args);
+        }
+
+        // Writes a line built from independently colored parts to the body's scrolling area, if a body is set
+        public void WriteLine(IEnumerable<Part> parts)
+        {
+            Body?.WriteLine(parts);
         }
 
         // Prints the body prompt and reads a command, if a body is set

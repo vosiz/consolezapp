@@ -49,7 +49,7 @@ namespace ConsoleZapp
             foreach (var control in Controls.Values)
             {
                 control.SetWidth(width - 4);
-                PrintRow(control.Render(), width);
+                PrintRow(control, width);
             }
 
             PrintBorder(width);
@@ -64,7 +64,7 @@ namespace ConsoleZapp
             var row_index = GetControlRowIndex(name);
 
             Console.SetCursorPosition(0, TopRow + 1 + row_index);
-            Console.Write(FormatRow(control.Render(), Width));
+            WriteRow(control, Width);
         }
 
         // Finds a control's row position within this container, based on add order
@@ -89,18 +89,54 @@ namespace ConsoleZapp
             Console.WriteLine(BorderCorner + new string(BorderHorizontal, width - 2) + BorderCorner);
         }
 
-        // Prints a single content row padded to the container width
-        private void PrintRow(string content, int width)
+        // Prints a single control's row padded to the container width, then moves to the next line
+        private void PrintRow(Control control, int width)
         {
-            Console.WriteLine(FormatRow(content, width));
+            WriteRow(control, width);
+            Console.WriteLine();
         }
 
-        // Formats a single content row, padded and wrapped in border characters
-        private string FormatRow(string content, int width)
+        // Writes a single control's row at the current cursor position, coloring each part per its own setting
+        private void WriteRow(Control control, int width)
         {
-            var padded = content.PadRight(width - 4);
+            Console.Write(BorderVertical);
+            Console.Write(' ');
 
-            return $"{BorderVertical} {padded} {BorderVertical}";
+            var written = 0;
+
+            foreach (var part in control.GetParts())
+            {
+                var has_part_color = part.Foreground.HasValue;
+
+                if (has_part_color)
+                {
+                    Console.ForegroundColor = (ConsoleColor)part.Foreground.Value;
+                    Console.BackgroundColor = (ConsoleColor)part.Background.Value;
+                }
+
+                Console.Write(part.Text);
+                written += part.Text.Length;
+
+                if (has_part_color)
+                    Console.ResetColor();
+            }
+
+            var pad_length = Math.Max(0, width - 4 - written);
+            var has_fill_color = control.FillRowBackground && control.Foreground.HasValue;
+
+            if (has_fill_color)
+            {
+                Console.ForegroundColor = (ConsoleColor)control.Foreground.Value;
+                Console.BackgroundColor = (ConsoleColor)control.Background.Value;
+            }
+
+            Console.Write(new string(' ', pad_length));
+
+            if (has_fill_color)
+                Console.ResetColor();
+
+            Console.Write(' ');
+            Console.Write(BorderVertical);
         }
     }
 }
