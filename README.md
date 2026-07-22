@@ -16,8 +16,8 @@ No tracked
 
 ## Features
 - Formatted/colored console printing, structured lines & headlines
-- Reusable line-based Controls (text, labeled values, progress, percentage, progress bar with colors)
-- Tui engine — fixed header + scrolling body for full console screens
+- Reusable line-based Controls (text, labeled values, progress, percentage, progress bar with colors, per-part colored rich text)
+- Tui engine — fixed header + scrolling body for full console screens, with configurable/colored borders and colored input handling
 
 See [Roadmap](#roadmap) for full details.
 
@@ -36,11 +36,15 @@ See [Roadmap](#roadmap) for full details.
 - [x] Progress
 - [x] Percentage
 - [x] ProgressBar with colors
+- [x] RichText (per-part coloring)
 
 ### Tui
 - [x] Header, Container
 - [x] Body - command prompt
 - [x] Body - scrolling output
+- [x] Control/row coloring (whole or per-part, fg/bg, row background fill)
+- [x] Colored prompt, keyword highlighting and input recoloring
+- [x] Configurable header border (chars + color)
 - [ ] Menu
 
 ## Test projects
