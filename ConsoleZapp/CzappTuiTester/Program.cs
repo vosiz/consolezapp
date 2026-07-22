@@ -28,6 +28,9 @@ namespace CzappTuiTester
         // Total tokens for the RichText usage test, used/total turn red past 50% of this, green otherwise
         private const int TotalTokens = 50;
 
+        // App-level "accepted" rule for the RecolorLastInput test: input longer than this is a meaningful message
+        private const int AcceptedLengthThreshold = 10;
+
         // Number of filler lines written on startup, useful for jumping straight into a scrolled state
         private const int FillerLines = 0;
 
@@ -131,6 +134,11 @@ namespace CzappTuiTester
             // Colored prompt test: prompt itself is orange, typed-in text stays the console's normal color
             tui.SetPromptColor(Cli.Conclr.Yellowd, Cli.Conclr.DefBg);
 
+            // Registered keyword-color test: these words get highlighted magenta wherever they occur in input
+            tui.AddKeywordColor(InfoCommand, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
+            tui.AddKeywordColor(WarnCommand, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
+            tui.AddKeywordColor(ErrorCommand, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
+
             tui.Print();
 
             for (var i = 1; i <= FillerLines; i++)
@@ -143,6 +151,10 @@ namespace CzappTuiTester
             do
             {
                 command = tui.ReadCommand();
+
+                // RecolorLastInput test: app-level "accepted" rule - long enough to be a meaningful message
+                if (command != null && command.Length > AcceptedLengthThreshold)
+                    tui.RecolorLastInput(Cli.Conclr.Green, Cli.Conclr.DefBg);
 
                 if (command == LongLineCommand)
                     tui.WriteLine("Overflow test: {0}", new string('X', 200));

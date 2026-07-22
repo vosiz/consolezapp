@@ -9,6 +9,11 @@ namespace ConsoleZapp
         private Cli.Conclr? PromptForeground;
         private Cli.Conclr? PromptBackground;
 
+        private readonly List<Part> KeywordColors = new List<Part>();
+
+        private string LastInputLine;
+        private int LastInputRow = -1;
+
         private int TopRow;
         private int CurrentRow;
 
@@ -28,6 +33,28 @@ namespace ConsoleZapp
         {
             PromptForeground = fg;
             PromptBackground = bg;
+        }
+
+        // Registers an exact keyword that gets highlighted in the given colors wherever it occurs in typed input
+        public void AddKeywordColor(string keyword, Cli.Conclr fg, Cli.Conclr bg)
+        {
+            KeywordColors.Add(new Part { Text = keyword, Foreground = fg, Background = bg });
+        }
+
+        // Recolors the whole last input line (prompt included) in place, e.g. to indicate it was accepted.
+        // Caller decides when this applies - must be called before any further write scrolls the area, since
+        // the targeted row is remembered by absolute position, not tracked through later scrolling.
+        public void RecolorLastInput(Cli.Conclr fg, Cli.Conclr bg)
+        {
+            if (LastInputRow < 0)
+                return;
+
+            Console.SetCursorPosition(0, LastInputRow);
+
+            Console.ForegroundColor = (ConsoleColor)fg;
+            Console.BackgroundColor = (ConsoleColor)bg;
+            Console.Write(LastInputLine);
+            Console.ResetColor();
         }
 
         // Sets the row where the scrolling area begins, called by Tui after the header is printed
@@ -94,7 +121,9 @@ namespace ConsoleZapp
         {
             PrepareRow();
 
-            Console.SetCursorPosition(0, CurrentRow);
+            var row = CurrentRow;
+
+            Console.SetCursorPosition(0, row);
 
             var has_color = PromptForeground.HasValue;
 
@@ -113,7 +142,36 @@ namespace ConsoleZapp
 
             CurrentRow++;
 
+            LastInputRow = row;
+            LastInputLine = Prompt + command;
+
+            HighlightKeywords(command, row);
+
             return command;
+        }
+
+        // Recolors any registered keyword occurrences found in the just-typed command, in place
+        private void HighlightKeywords(string command, int row)
+        {
+            if (string.IsNullOrEmpty(command))
+                return;
+
+            foreach (var keyword in KeywordColors)
+            {
+                var start = 0;
+
+                while ((start = command.IndexOf(keyword.Text, start, StringComparison.Ordinal)) >= 0)
+                {
+                    Console.SetCursorPosition(Prompt.Length + start, row);
+
+                    Console.ForegroundColor = (ConsoleColor)keyword.Foreground.Value;
+                    Console.BackgroundColor = (ConsoleColor)keyword.Background.Value;
+                    Console.Write(keyword.Text);
+                    Console.ResetColor();
+
+                    start += keyword.Text.Length;
+                }
+            }
         }
 
         // Truncates text that would overflow the window width, avoiding a native wrap/scroll on write

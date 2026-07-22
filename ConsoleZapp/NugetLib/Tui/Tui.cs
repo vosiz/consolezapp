@@ -63,5 +63,17 @@ namespace ConsoleZapp
         {
             Body?.SetPromptColor(fg, bg);
         }
+
+        // Registers an exact keyword that gets highlighted wherever it occurs in typed input, if a body is set
+        public void AddKeywordColor(string keyword, Cli.Conclr fg, Cli.Conclr bg)
+        {
+            Body?.AddKeywordColor(keyword, fg, bg);
+        }
+
+        // Recolors the whole last input line in place, if a body is set - see Body.RecolorLastInput for caveats
+        public void RecolorLastInput(Cli.Conclr fg, Cli.Conclr bg)
+        {
+            Body?.RecolorLastInput(fg, bg);
+        }
     }
 }
