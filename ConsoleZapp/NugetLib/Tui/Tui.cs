@@ -57,5 +57,11 @@ namespace ConsoleZapp
         {
             return Body?.ReadCommand();
         }
+
+        // Sets the color the body's prompt is written in, if a body is set
+        public void SetPromptColor(Cli.Conclr fg, Cli.Conclr bg)
+        {
+            Body?.SetPromptColor(fg, bg);
+        }
     }
 }

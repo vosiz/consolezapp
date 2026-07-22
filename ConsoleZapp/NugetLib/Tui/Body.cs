@@ -6,6 +6,8 @@ namespace ConsoleZapp
     public class Body
     {
         private string Prompt = "> ";
+        private Cli.Conclr? PromptForeground;
+        private Cli.Conclr? PromptBackground;
 
         private int TopRow;
         private int CurrentRow;
@@ -19,6 +21,13 @@ namespace ConsoleZapp
         public void SetPrompt(string prompt)
         {
             Prompt = prompt;
+        }
+
+        // Sets the color the prompt is written in; the typed-in command itself keeps the console's normal color
+        public void SetPromptColor(Cli.Conclr fg, Cli.Conclr bg)
+        {
+            PromptForeground = fg;
+            PromptBackground = bg;
         }
 
         // Sets the row where the scrolling area begins, called by Tui after the header is printed
@@ -86,7 +95,19 @@ namespace ConsoleZapp
             PrepareRow();
 
             Console.SetCursorPosition(0, CurrentRow);
+
+            var has_color = PromptForeground.HasValue;
+
+            if (has_color)
+            {
+                Console.ForegroundColor = (ConsoleColor)PromptForeground.Value;
+                Console.BackgroundColor = (ConsoleColor)PromptBackground.Value;
+            }
+
             Console.Write(Prompt);
+
+            if (has_color)
+                Console.ResetColor();
 
             var command = Console.ReadLine();
 
