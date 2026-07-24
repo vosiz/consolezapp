@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ConsoleZapp
 {
@@ -7,30 +8,72 @@ namespace ConsoleZapp
     {
         private readonly Header Header;
         private readonly Body Body;
-        private readonly int Width;
+        private readonly int? Width;
 
-        // Constructor with header, optional body and screen width
-        public Tui(Header header, Body body = null, int width = 80)
+        private int LastWidth = -1;
+        private int LastHeight = -1;
+
+        // Constructor with header, optional body and an optional fixed-width override; if width is
+        // omitted, Print() reads the console's live width instead of assuming a fixed one
+        public Tui(Header header, Body body = null, int? width = null)
         {
             Header = header;
             Body = body;
             Width = width;
+
+            if (Body != null)
+                Body.ResizeCheck = CheckResize;
         }
 
         // Prints the header to the console and sets up the body's scrolling area below it
         public void Print()
         {
+            // Console input is read raw via ReadConsoleInputW (see Body.ReadLineFromKeys /
+            // Interop/ConsoleInput.cs) and already carries correct Unicode regardless of codepage,
+            // but console *output* still goes through Console.Out with whatever OutputEncoding the
+            // process started with - without forcing UTF-8 here, writing e.g. "€" back out falls back
+            // to '?' since it doesn't exist in most default OEM codepages.
+            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
             // Header/Body row tracking assumes the header starts at absolute row 0 - clearing
             // first guarantees that, regardless of whatever was on screen before this call.
             Console.Clear();
 
-            Header.Print(Width);
+            var width = Width ?? Console.WindowWidth;
+
+            Header.Print(width);
             Body?.Init(Header.GetHeight());
+
+            LastWidth = width;
+            LastHeight = Console.WindowHeight;
+        }
+
+        // Re-prints the header and redraws the body from its retained buffer if the console has
+        // been resized since the last draw - unlike Print(), this keeps the body's scrollback
+        // history instead of starting a fresh session. Called from every method that draws
+        // something, so a resize gets picked up on the next write/update/read rather than live
+        // mid-resize (there's no console resize event to hook - this project targets the legacy
+        // console host, not just terminals that could offer one).
+        private void CheckResize()
+        {
+            var width = Width ?? Console.WindowWidth;
+            var height = Console.WindowHeight;
+
+            if (width == LastWidth && height == LastHeight)
+                return;
+
+            LastWidth = width;
+            LastHeight = height;
+
+            Console.Clear();
+            Header.Print(width);
+            Body?.Redraw(Header.GetHeight());
         }
 
         // Re-renders a single header control in place, defaults to "main" container
         public void UpdateControl(string name, string container_id = "main")
         {
+            CheckResize();
             Header.UpdateControl(name, container_id);
         }
 
@@ -49,24 +92,28 @@ namespace ConsoleZapp
         // Writes a formatted line to the body's scrolling area, if a body is set
         public void WriteLine(string fmt, params object[] args)
         {
+            CheckResize();
             Body?.WriteLine(fmt, args);
         }
 
         // Writes a formatted line in the given colors to the body's scrolling area, if a body is set
         public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
         {
+            CheckResize();
             Body?.WriteLine(fg, bg, fmt, args);
         }
 
         // Writes a line built from independently colored parts to the body's scrolling area, if a body is set
         public void WriteLine(IEnumerable<Part> parts)
         {
+            CheckResize();
             Body?.WriteLine(parts);
         }
 
         // Prints the body prompt and reads a command, if a body is set
         public string ReadCommand()
         {
+            CheckResize();
             return Body?.ReadCommand();
         }
 

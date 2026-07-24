@@ -130,10 +130,20 @@ namespace ConsoleZapp
             WriteBorderText(BorderVertical.ToString());
             Console.Write(' ');
 
+            var available = Math.Max(0, width - 4);
             var written = 0;
 
             foreach (var part in control.GetParts())
             {
+                if (written >= available)
+                    break;
+
+                var text = part.Text;
+                var remaining = available - written;
+
+                if (text.Length > remaining)
+                    text = text.Substring(0, remaining);
+
                 var has_part_color = part.Foreground.HasValue;
 
                 if (has_part_color)
@@ -142,8 +152,8 @@ namespace ConsoleZapp
                     Console.BackgroundColor = (ConsoleColor)part.Background.Value;
                 }
 
-                Console.Write(part.Text);
-                written += part.Text.Length;
+                Console.Write(text);
+                written += text.Length;
 
                 if (has_part_color)
                     Console.ResetColor();
