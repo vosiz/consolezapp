@@ -5,9 +5,6 @@ namespace CzappTuiTester
 {
     internal class Program
     {
-        // Console width passed to Tui, matches the project's min-width-80 convention
-        private const int Width = 80;
-
         // Typing this command exits the loop
         private const string ExitCommand = "exit";
 
@@ -19,6 +16,10 @@ namespace CzappTuiTester
 
         // Typing this command writes a body line with several independently colored parts
         private const string TypesCommand = "types";
+
+        // Typing this command writes a line with non-ASCII glyphs, to check they survive a scroll
+        // without corrupting into replacement chars (the retained-buffer redraw fix)
+        private const string SpecialCharsCommand = "special";
 
         // Typing one of these severities updates the "Last state" header control to match its color
         private const string InfoCommand = "info";
@@ -128,8 +129,10 @@ namespace CzappTuiTester
             var last_state = header.AddControl("last_state", new RichText());
             UpdateLastState(last_state, null);
 
+            // No width passed: Tui reads the console's live width at Print() time (resize the
+            // window before starting to see it reflected in the header border)
             var body = new Body();
-            var tui = new Tui(header, body, Width);
+            var tui = new Tui(header, body);
 
             // Border color test: header box border (corners, edges) drawn in red
             tui.SetBorderColor(Cli.Conclr.Red, Cli.Conclr.DefBg);
@@ -165,6 +168,8 @@ namespace CzappTuiTester
                     tui.WriteLine("Tokens used: {0}/{1}", tokens_used, TotalTokens);
                 else if (command == TypesCommand)
                     tui.WriteLine(BuildTypesLine());
+                else if (command == SpecialCharsCommand)
+                    tui.WriteLine("Special chars: ■■■ ⣿⣿⣿ (type a few more commands to scroll this line and check it stays intact)");
                 else if (command != ExitCommand)
                     tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);
 
