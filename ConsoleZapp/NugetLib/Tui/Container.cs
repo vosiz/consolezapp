@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace ConsoleZapp
 {
@@ -15,20 +14,18 @@ namespace ConsoleZapp
         private Cli.Conclr? BorderForeground;
         private Cli.Conclr? BorderBackground;
 
-        private readonly Dictionary<string, Control> Controls = new Dictionary<string, Control>();
+        private readonly OrderedMap<Control> Controls = new OrderedMap<Control>();
 
         private int TopRow;
         private int Width;
 
         // Constructor
-        public Container()
-        {
-        }
+        public Container() { }
 
         // Adds a control under the given name, returns it back for chaining
         public T AddControl<T>(string name, T control) where T : Control
         {
-            Controls[name] = control;
+            Controls.Set(name, control);
             return control;
         }
 
@@ -39,7 +36,13 @@ namespace ConsoleZapp
         }
 
         // Overrides the border characters used when printing this container, replacing the Unicode box-drawing default
-        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right)
+        public void SetBorderChars(
+            char horizontal,
+            char vertical,
+            char top_left,
+            char top_right,
+            char bottom_left,
+            char bottom_right)
         {
             BorderHorizontal = horizontal;
             BorderVertical = vertical;
@@ -113,7 +116,7 @@ namespace ConsoleZapp
             var left_corner = is_top ? BorderTopLeft : BorderBottomLeft;
             var right_corner = is_top ? BorderTopRight : BorderBottomRight;
 
-            WriteBorderText(left_corner + new string(BorderHorizontal, width - 2) + right_corner);
+            WriteBorderText(left_corner + new string(BorderHorizontal, Math.Max(0, width - 2)) + right_corner);
             Console.WriteLine();
         }
 
@@ -144,34 +147,15 @@ namespace ConsoleZapp
                 if (text.Length > remaining)
                     text = text.Substring(0, remaining);
 
-                var has_part_color = part.Foreground.HasValue;
-
-                if (has_part_color)
-                {
-                    Console.ForegroundColor = (ConsoleColor)part.Foreground.Value;
-                    Console.BackgroundColor = (ConsoleColor)part.Background.Value;
-                }
-
-                Console.Write(text);
+                ColorWriter.Write(part.Foreground, part.Background, text);
                 written += text.Length;
-
-                if (has_part_color)
-                    Console.ResetColor();
             }
 
             var pad_length = Math.Max(0, width - 4 - written);
-            var has_fill_color = control.FillRowBackground && control.Foreground.HasValue;
+            var fill_fg = control.FillRowBackground ? control.Foreground : null;
+            var fill_bg = control.FillRowBackground ? control.Background : null;
 
-            if (has_fill_color)
-            {
-                Console.ForegroundColor = (ConsoleColor)control.Foreground.Value;
-                Console.BackgroundColor = (ConsoleColor)control.Background.Value;
-            }
-
-            Console.Write(new string(' ', pad_length));
-
-            if (has_fill_color)
-                Console.ResetColor();
+            ColorWriter.Write(fill_fg, fill_bg, new string(' ', pad_length));
 
             Console.Write(' ');
             WriteBorderText(BorderVertical.ToString());
@@ -180,18 +164,7 @@ namespace ConsoleZapp
         // Writes text in the border color, if set, resetting afterwards
         private void WriteBorderText(string text)
         {
-            var has_color = BorderForeground.HasValue;
-
-            if (has_color)
-            {
-                Console.ForegroundColor = (ConsoleColor)BorderForeground.Value;
-                Console.BackgroundColor = (ConsoleColor)BorderBackground.Value;
-            }
-
-            Console.Write(text);
-
-            if (has_color)
-                Console.ResetColor();
+            ColorWriter.Write(BorderForeground, BorderBackground, text);
         }
     }
 }
