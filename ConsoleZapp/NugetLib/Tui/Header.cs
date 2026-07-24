@@ -1,15 +1,13 @@
-using System.Collections.Generic;
-
 namespace ConsoleZapp
 {
     public class Header
     {
-        private readonly Dictionary<string, Container> Containers = new Dictionary<string, Container>();
+        private readonly OrderedMap<Container> Containers = new OrderedMap<Container>();
 
         // Constructor
         public Header()
         {
-            Containers["main"] = new Container();
+            Containers.Set("main", new Container());
         }
 
         // Adds a control to the given container, defaults to "main"
@@ -31,7 +29,14 @@ namespace ConsoleZapp
         }
 
         // Overrides the border characters of the given container, defaults to "main"
-        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
+        public void SetBorderChars(
+            char horizontal,
+            char vertical,
+            char top_left,
+            char top_right,
+            char bottom_left,
+            char bottom_right,
+            string container_id = "main")
         {
             Containers[container_id].SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right);
         }
