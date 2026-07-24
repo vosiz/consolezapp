@@ -13,8 +13,7 @@ namespace ConsoleZapp
         private int LastWidth = -1;
         private int LastHeight = -1;
 
-        // Constructor with header, optional body and an optional fixed-width override; if width is
-        // omitted, Print() reads the console's live width instead of assuming a fixed one
+        // Constructor with header, optional body and an optional fixed-width override; if width is omitted, Print() reads the console's live width instead of assuming a fixed one
         public Tui(Header header, Body body = null, int? width = null)
         {
             Header = header;
@@ -28,15 +27,10 @@ namespace ConsoleZapp
         // Prints the header to the console and sets up the body's scrolling area below it
         public void Print()
         {
-            // Console input is read raw via ReadConsoleInputW (see Body.ReadLineFromKeys /
-            // Interop/ConsoleInput.cs) and already carries correct Unicode regardless of codepage,
-            // but console *output* still goes through Console.Out with whatever OutputEncoding the
-            // process started with - without forcing UTF-8 here, writing e.g. "€" back out falls back
-            // to '?' since it doesn't exist in most default OEM codepages.
+            // console output still goes through Console.Out with the process's OutputEncoding - without forcing UTF-8 here, writing e.g. "€" back out falls back to '?' on most OEM codepages
             Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
-            // Header/Body row tracking assumes the header starts at absolute row 0 - clearing
-            // first guarantees that, regardless of whatever was on screen before this call.
+            // row tracking assumes the header starts at absolute row 0 - clearing first guarantees that, regardless of what was on screen before this call
             Console.Clear();
 
             var width = Width ?? Console.WindowWidth;
@@ -48,12 +42,8 @@ namespace ConsoleZapp
             LastHeight = Console.WindowHeight;
         }
 
-        // Re-prints the header and redraws the body from its retained buffer if the console has
-        // been resized since the last draw - unlike Print(), this keeps the body's scrollback
-        // history instead of starting a fresh session. Called from every method that draws
-        // something, so a resize gets picked up on the next write/update/read rather than live
-        // mid-resize (there's no console resize event to hook - this project targets the legacy
-        // console host, not just terminals that could offer one).
+        // Re-prints the header and redraws the body from its retained buffer if the console has been resized since the last draw, keeping scrollback history (unlike Print(), which starts fresh).
+        // Called from every drawing method, since there's no resize event to hook on this console host.
         private void CheckResize()
         {
             var width = Width ?? Console.WindowWidth;
@@ -78,7 +68,14 @@ namespace ConsoleZapp
         }
 
         // Overrides the border characters of the given header container, defaults to "main"
-        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
+        public void SetBorderChars(
+            char horizontal,
+            char vertical,
+            char top_left,
+            char top_right,
+            char bottom_left,
+            char bottom_right,
+            string container_id = "main")
         {
             Header.SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right, container_id);
         }
@@ -132,6 +129,7 @@ namespace ConsoleZapp
         // Recolors the whole last input line in place, if a body is set - see Body.RecolorLastInput for caveats
         public void RecolorLastInput(Cli.Conclr fg, Cli.Conclr bg)
         {
+            CheckResize();
             Body?.RecolorLastInput(fg, bg);
         }
     }
