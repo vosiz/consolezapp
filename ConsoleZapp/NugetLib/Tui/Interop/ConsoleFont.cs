@@ -35,53 +35,27 @@ namespace ConsoleZapp.Interop
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX lpConsoleCurrentFontEx);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool SetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX lpConsoleCurrentFontEx);
-
         private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
-        // Reads the console's current font into font, returns whether the call succeeded
-        private static bool TryReadFont(IntPtr handle, out CONSOLE_FONT_INFO_EX font)
-        {
-            font = new CONSOLE_FONT_INFO_EX { cbSize = (uint)Marshal.SizeOf(typeof(CONSOLE_FONT_INFO_EX)) };
-            return GetCurrentConsoleFontEx(handle, false, ref font);
-        }
-
-        // Requests face_name via SetCurrentConsoleFontEx, then re-reads the font to confirm the switch actually took.
-        // Windows silently keeps the previous (raster) font instead of failing when the requested face name isn't installed, so the blind "set" return value can't be trusted on its own.
-        private static bool TryForceFace(IntPtr handle, CONSOLE_FONT_INFO_EX font, string face_name)
-        {
-            font.FaceName = face_name;
-
-            if (font.dwFontSize.Y == 0)
-                font.dwFontSize.Y = 16;
-
-            if (!SetCurrentConsoleFontEx(handle, false, ref font))
-                return false;
-
-            return TryReadFont(handle, out var applied) && (applied.FontFamily & TMPF_TRUETYPE) != 0;
-        }
-
-        // Ensures the console uses a TrueType font, forcing preferred_face_name (falling back to fallback_face_name) if a raster font is detected.
-        // Returns true if the font is confirmed TrueType (already was, or was successfully switched), false if it's raster and neither face could be forced.
-        // Also returns true (no-op) for redirected/non-interactive output, where there's no real console font to inspect or change.
-        internal static bool TryEnsureTrueTypeFont(string preferred_face_name = "Consolas", string fallback_face_name = "Lucida Console")
+        // Reports whether the console is currently using a raster (bitmap) font, which can't decode multi-byte UTF-8 box-drawing glyphs into a single character and garbles them one byte at a time.
+        // Returns false (assume fine, no fallback needed) for redirected/non-interactive output or if the font can't be read at all - there's no real console font to inspect there, or no reliable signal to act on.
+        // Deliberately read-only: an earlier version also tried to force a TrueType font via SetCurrentConsoleFontEx, but changing the font live could itself shift the console's effective column/row geometry underneath Tui's own row-position math - not worth the risk for a cosmetic upgrade.
+        internal static bool IsRasterFont()
         {
             if (Console.IsOutputRedirected)
-                return true;
+                return false;
 
             var handle = GetStdHandle(STD_OUTPUT_HANDLE);
 
             if (handle == IntPtr.Zero || handle == INVALID_HANDLE_VALUE)
-                return true;
+                return false;
 
-            if (!TryReadFont(handle, out var font))
-                return true;
+            var font = new CONSOLE_FONT_INFO_EX { cbSize = (uint)Marshal.SizeOf(typeof(CONSOLE_FONT_INFO_EX)) };
 
-            if ((font.FontFamily & TMPF_TRUETYPE) != 0)
-                return true;
+            if (!GetCurrentConsoleFontEx(handle, false, ref font))
+                return false;
 
-            return TryForceFace(handle, font, preferred_face_name) || TryForceFace(handle, font, fallback_face_name);
+            return (font.FontFamily & TMPF_TRUETYPE) == 0;
         }
     }
 }
