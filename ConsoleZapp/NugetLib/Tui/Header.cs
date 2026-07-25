@@ -47,6 +47,13 @@ namespace ConsoleZapp
             Containers[container_id].SetBorderColor(fg, bg);
         }
 
+        // Switches every container's border characters to plain ASCII (-, |, +), used as a fallback when the console can't render Unicode box-drawing glyphs (e.g. Windows 7 stuck on a raster font)
+        public void UseAsciiBorders()
+        {
+            foreach (var container in Containers.Values)
+                container.SetBorderChars('-', '|', '+', '+', '+', '+');
+        }
+
         // Returns the total row count all containers take up when printed, stacked vertically
         public int GetHeight()
         {

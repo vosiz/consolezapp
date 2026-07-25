@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ConsoleZapp.Interop;
 
 namespace ConsoleZapp
 {
@@ -29,6 +30,10 @@ namespace ConsoleZapp
         {
             // console output still goes through Console.Out with the process's OutputEncoding - without forcing UTF-8 here, writing e.g. "€" back out falls back to '?' on most OEM codepages
             Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+            // on a raster (bitmap) console font (the common Windows 7 default), multi-byte UTF-8 box-drawing glyphs get decoded byte-by-byte as separate garbage glyphs instead of one character - force a TrueType font, or degrade to ASCII borders if that isn't possible
+            if (!ConsoleFont.TryEnsureTrueTypeFont())
+                Header.UseAsciiBorders();
 
             // row tracking assumes the header starts at absolute row 0 - clearing first guarantees that, regardless of what was on screen before this call
             Console.Clear();
