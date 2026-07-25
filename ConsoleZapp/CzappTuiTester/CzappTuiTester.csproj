@@ -9,4 +9,10 @@
     <ProjectReference Include="..\NugetLib\NugetLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="run-conhost.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

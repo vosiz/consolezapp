@@ -16,6 +16,7 @@ bld/
 
 *.vs
 
-
+# Local Win7-conhost repro helper, machine-specific test tool, not part of the shipped app
+CzappTuiTester/run-conhost.bat
 
 
