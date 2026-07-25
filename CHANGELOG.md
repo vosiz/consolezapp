@@ -1,5 +1,17 @@
 # Change log
 ## Current version
+### 1.7.0 - Dynamic redraw engine
+- change: Tui reads live console width/height instead of a fixed construction-time value
+- addition: Body retained scrollback buffer, redraws from it on scroll/resize (fixes non-ASCII glyph corruption from Console.MoveBufferArea)
+- addition: Tui detects console resize and redraws header + body from the retained buffer
+- rework: Body.ReadCommand reads via raw ReadConsoleInputW instead of Console.ReadLine
+- fix: multibyte typed input (e.g. €) no longer mangled
+- fix: header duplicate/stale fragments after a console resize
+- fix: surrogate-pair-aware cursor movement/backspace/delete in ReadCommand
+- fix: RecolorLastInput missing resize check
+- cleanup: shared ColorWriter helper, OrderedMap for deterministic container/control ordering
+
+## History
 ### 1.6.0 - Control, prompt and border coloring
 - addition: Control.SetColor, SetFillRowBackground
 - addition: RichText control (per-part coloring)
@@ -11,7 +23,6 @@
 - addition: Container.SetBorderColor
 - change: Unicode box-drawing border default
 
-## History
 ### 1.5.0 - Live header update
 - addition: Container.UpdateControl
 - addition: Header/Tui UpdateControl forwarding

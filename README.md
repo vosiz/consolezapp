@@ -45,6 +45,7 @@ See [Roadmap](#roadmap) for full details.
 - [x] Control/row coloring (whole or per-part, fg/bg, row background fill)
 - [x] Colored prompt, keyword highlighting and input recoloring
 - [x] Configurable header border (chars + color)
+- [x] Live console width + dynamic resize/redraw
 - [ ] Menu
 
 ## Test projects
