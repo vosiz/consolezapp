@@ -71,15 +71,24 @@ namespace ConsoleZapp
             TopRow = Console.CursorTop;
             Width = width;
 
-            PrintBorder(width, is_top: true);
+            var row = TopRow;
+
+            PrintBorder(width, is_top: true, row);
+            row++;
 
             foreach (var control in Controls.Values)
             {
                 control.SetWidth(width - 4);
-                PrintRow(control, width);
+                Console.SetCursorPosition(0, row);
+                WriteRow(control, width);
+                row++;
             }
 
-            PrintBorder(width, is_top: false);
+            PrintBorder(width, is_top: false, row);
+            row++;
+
+            // a row exactly Console.WindowWidth characters wide (border+padding+border, see WriteRow/PrintBorder) makes conhost auto-wrap on its own last character - relying on Console.WriteLine() here would advance a second time on top of that, so every subsequent write is positioned explicitly instead
+            Console.SetCursorPosition(0, row);
         }
 
         // Re-renders a single control's row in place, leaving borders and every other row untouched
@@ -110,21 +119,14 @@ namespace ConsoleZapp
             return -1;
         }
 
-        // Prints a horizontal border line, picking corner chars based on whether it's the top or bottom edge
-        private void PrintBorder(int width, bool is_top)
+        // Prints a horizontal border line at the given row, picking corner chars based on whether it's the top or bottom edge
+        private void PrintBorder(int width, bool is_top, int row)
         {
             var left_corner = is_top ? BorderTopLeft : BorderBottomLeft;
             var right_corner = is_top ? BorderTopRight : BorderBottomRight;
 
+            Console.SetCursorPosition(0, row);
             WriteBorderText(left_corner + new string(BorderHorizontal, Math.Max(0, width - 2)) + right_corner);
-            Console.WriteLine();
-        }
-
-        // Prints a single control's row padded to the container width, then moves to the next line
-        private void PrintRow(Control control, int width)
-        {
-            WriteRow(control, width);
-            Console.WriteLine();
         }
 
         // Writes a single control's row at the current cursor position, coloring each part per its own setting

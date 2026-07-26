@@ -22,9 +22,17 @@ namespace ConsoleZapp
         private int TopRow;
         private int CurrentRow;
 
-        // Retained scrollback: one entry per row currently visible in the scroll region, oldest first.
+        // Retained scrollback: one entry per line ever written, oldest first, never trimmed - the whole session's history stays in memory (see .goals.md, "Real, reviewable scrollback for Body").
         // Redraws are sourced from here instead of reading back the live console screen content (Console.MoveBufferArea), which is what corrupts non-ASCII glyphs on scroll.
         private readonly List<List<Part>> Rows = new List<List<Part>>();
+
+        private ScrollMode Mode = ScrollMode.Manual;
+
+        // Absolute index into Rows of the topmost row currently shown, while reviewing history; -1 means "following the live tail" (the normal state). Deliberately an absolute index, not "N rows back from the tail" - so a mid-review position doesn't drift when new content is appended (see .goals.md).
+        private int ScrollOffset = -1;
+
+        // True for the duration of ReadLineFromKeys - lets RedrawRows/ContentCapacity know to leave the bottom row free for the live-typed prompt instead of filling it with history
+        private bool PromptActive;
 
         // Constructor
         public Body() { }
@@ -40,6 +48,12 @@ namespace ConsoleZapp
         {
             PromptForeground = fg;
             PromptBackground = bg;
+        }
+
+        // Sets what happens to a mid-review scroll position when new content is written - Manual (default) keeps it fixed, AutoScroll snaps back to the live tail on every write
+        public void SetScrollMode(ScrollMode mode)
+        {
+            Mode = mode;
         }
 
         // Registers an exact keyword that gets highlighted in the given colors wherever it occurs in typed input
@@ -68,6 +82,7 @@ namespace ConsoleZapp
             TopRow = top_row;
             CurrentRow = top_row;
             Rows.Clear();
+            ScrollOffset = -1;
         }
 
         // Re-attaches the scroll region to a (possibly unchanged) top row and redraws every retained row, without discarding scrollback history - called by Tui when it detects a console resize, as opposed to Init() which starts a fresh session
@@ -75,10 +90,9 @@ namespace ConsoleZapp
         {
             TopRow = top_row;
 
-            TrimToCapacity();
             RedrawRows();
 
-            CurrentRow = TopRow + Rows.Count;
+            CurrentRow = NextContentRow();
         }
 
         // Writes a formatted line into the scrolling area, scrolling the area up if needed
@@ -106,12 +120,13 @@ namespace ConsoleZapp
         // Prints the prompt and reads a command line from the console, scrolling the area up if needed
         public string ReadCommand()
         {
-            PrepareRow();
+            PreparePromptRow();
 
             var command = ReadLineFromKeys();
 
+            PromptActive = false;
+
             var row = CurrentRow;
-            CurrentRow++;
 
             LastInputRow = row;
             LastInputLine = Prompt + command;
@@ -125,6 +140,7 @@ namespace ConsoleZapp
 
         // Reads a line character-by-character via raw ReadConsoleInputW (Interop/ConsoleInput.cs) instead of Console.ReadLine/Console.ReadKey - keeps the cursor pinned to this row (no native wrap/scroll dragging the header), sidesteps ReadKey's lossy codepage translation, and picks up resize events immediately.
         // Renders at the live CurrentRow field so a mid-loop Body.Redraw() is picked up correctly on the next render.
+        // PageUp/PageDown scroll through retained history instead of editing the line - rendered full-screen in place of the input row. Any other key snaps back to the live tail first (see ScrollOffset), then falls through to normal handling, so e.g. typing a character both exits review and gets typed.
         private string ReadLineFromKeys()
         {
             var text = new StringBuilder();
@@ -132,7 +148,10 @@ namespace ConsoleZapp
 
             while (true)
             {
-                RenderInputRow(CurrentRow, text, cursor);
+                if (ScrollOffset >= 0)
+                    RedrawRows();
+                else
+                    RenderInputRow(CurrentRow, text, cursor);
 
                 var key_event = ConsoleInput.ReadKeyOrResize(ResizeCheck);
 
@@ -147,12 +166,66 @@ namespace ConsoleZapp
 
                 for (var i = 0; i < repeat_count; i++)
                 {
+                    if (virtual_key == ConsoleKey.PageUp)
+                    {
+                        ScrollPageUp();
+                        continue;
+                    }
+
+                    if (virtual_key == ConsoleKey.PageDown)
+                    {
+                        ScrollPageDown();
+
+                        // ScrollPageDown can itself land back on the live tail (ScrollOffset reset to -1) - that transition needs the same re-render SnapToLive does below, or the content area is left showing the last review page instead of the true tail
+                        if (ScrollOffset < 0)
+                            SnapToLive(text, cursor);
+
+                        continue;
+                    }
+
+                    if (ScrollOffset >= 0)
+                        SnapToLive(text, cursor);
+
                     if (virtual_key == ConsoleKey.Enter)
                         return text.ToString();
 
                     ApplyKey(virtual_key, character, text, ref cursor);
                 }
             }
+        }
+
+        // Leaves review mode and redraws the content area as the true live tail, then re-renders the prompt row - used both when any regular key exits review, and when ScrollPageDown itself scrolls back down to the live tail
+        private void SnapToLive(StringBuilder text, int cursor)
+        {
+            ScrollOffset = -1;
+            CurrentRow = NextContentRow();
+            RedrawRows();
+
+            // make the prompt + in-progress text visible again immediately - otherwise a key that returns straight away (Enter) would submit before the row ever shows it
+            RenderInputRow(CurrentRow, text, cursor);
+        }
+
+        // Moves the reviewed position one screenful back (towards older history), entering review mode if not already in it, clamped to the start of retained history
+        private void ScrollPageUp()
+        {
+            var capacity = VisibleCapacity();
+            var live_top = Math.Max(0, Rows.Count - capacity);
+            var current_top = ScrollOffset >= 0 ? ScrollOffset : live_top;
+
+            ScrollOffset = Math.Max(0, current_top - capacity);
+        }
+
+        // Moves the reviewed position one screenful forward (towards newer history), snapping back to the live tail once it catches up - a no-op if already live
+        private void ScrollPageDown()
+        {
+            if (ScrollOffset < 0)
+                return;
+
+            var capacity = VisibleCapacity();
+            var live_top = Math.Max(0, Rows.Count - capacity);
+            var next_top = ScrollOffset + capacity;
+
+            ScrollOffset = next_top >= live_top ? -1 : next_top;
         }
 
         // Applies a single decoded key press to the in-progress input line
@@ -238,16 +311,31 @@ namespace ConsoleZapp
             Console.SetCursorPosition(Prompt.Length + (cursor - window_start), row);
         }
 
-        // Appends a row's parts to the retained buffer and writes it to the console, scrolling first if needed
+        // Appends a row's parts to the retained buffer and, unless the user is mid-review (Manual scroll mode), writes it to the console, shifting the visible window (or repositioning a concurrently-active prompt) first if needed
         private void WriteRow(List<Part> parts)
         {
-            PrepareRow();
+            // a reserved prompt row can never take the single-row fast path below: appending content may move where that reserved row lands, which the fast path doesn't account for
+            var needs_full_redraw = PromptActive || Rows.Count >= ContentCapacity();
+            var target_row = NextContentRow();
 
             Rows.Add(parts);
 
-            RewriteRow(CurrentRow, parts);
+            if (Mode == ScrollMode.AutoScroll)
+                ScrollOffset = -1;
 
-            CurrentRow++;
+            if (ScrollOffset >= 0)
+                return;
+
+            if (needs_full_redraw)
+            {
+                CurrentRow = NextContentRow();
+                RedrawRows();
+            }
+            else
+            {
+                CurrentRow = target_row;
+                RewriteRow(CurrentRow, parts);
+            }
         }
 
         // Recolors any registered keyword occurrences found in the just-typed command, in place - reuses SplitByKeywords so live and post-redraw overlap resolution always agree
@@ -345,44 +433,64 @@ namespace ConsoleZapp
             return text.Substring(0, content_length) + ELLIPSIS;
         }
 
-        // Scrolls the scrolling area up by one row if the cursor has reached the bottom of the window
-        private void PrepareRow()
+        // Marks the prompt row as reserved and, if the live tail is already full, shifts the visible window so the bottom row is free for it - called before ReadLineFromKeys starts reading, mirroring what WriteRow does for a regular line
+        private void PreparePromptRow()
+        {
+            PromptActive = true;
+
+            if (ScrollOffset >= 0)
+                return;
+
+            var capacity = ContentCapacity();
+
+            if (Rows.Count >= capacity)
+                RedrawRows();
+
+            CurrentRow = NextContentRow();
+        }
+
+        // Total rows the scroll region can physically show, regardless of what's currently reserved for a live prompt
+        private int VisibleCapacity()
         {
             var bottom_row = Console.WindowHeight - 1;
 
             // the very last row is kept blank as a safety margin against conhost's own native scroll, which would drag the fixed header along with it - cheap insurance, not worth removing
             var safe_row = Math.Max(TopRow, bottom_row - 1);
 
-            if (CurrentRow <= safe_row)
-                return;
-
-            if (Rows.Count > 0)
-                Rows.RemoveAt(0);
-
-            RedrawRows();
-
-            CurrentRow = safe_row;
+            return safe_row - TopRow + 1;
         }
 
-        // Drops the oldest retained rows past whatever the current window height can show - used when the window shrinks (via Redraw()); normal per-line scrolling (PrepareRow) already drops rows one at a time as it goes, so it doesn't need this
-        private void TrimToCapacity()
+        // How many of VisibleCapacity's rows are available for retained content - one less than full while a live prompt is being typed (its row is reserved), unless the user has scrolled away to review history, in which case the prompt isn't shown at all and the full capacity is history
+        private int ContentCapacity()
         {
-            var capacity = Math.Max(0, Console.WindowHeight - 1 - TopRow);
+            var capacity = VisibleCapacity();
 
-            while (Rows.Count > capacity)
-                Rows.RemoveAt(0);
+            if (PromptActive && ScrollOffset < 0)
+                return Math.Max(0, capacity - 1);
+
+            return capacity;
         }
 
-        // Redraws the whole scroll region from the retained buffer, blanking any rows past the buffer's current content - used instead of Console.MoveBufferArea, whose CHAR_INFO copy path corrupts non-ASCII glyphs (e.g. block/braille characters) under codepage 65001 in the legacy console host
+        // The absolute row the (Rows.Count)-th line (0-indexed) belongs on - i.e. where the next written line goes, or where the live prompt sits once it's the last thing pending. Always keyed off the full VisibleCapacity, independent of whether that row is currently reserved for a prompt: the reservation only affects how much of Rows gets drawn above it (see ContentCapacity), not which row this is.
+        private int NextContentRow()
+        {
+            return TopRow + Math.Min(Rows.Count, Math.Max(0, VisibleCapacity() - 1));
+        }
+
+        // Redraws the whole scroll region from the retained buffer - used instead of Console.MoveBufferArea, whose CHAR_INFO copy path corrupts non-ASCII glyphs (e.g. block/braille characters) under codepage 65001 in the legacy console host.
+        // Sourced from ScrollOffset when reviewing history, otherwise from the live tail (the last ContentCapacity rows, leaving room for a reserved prompt row if one is active). Always blanks every row through the true bottom of the region, even past what ContentCapacity draws, so a shrinking reservation can't leave stale content behind.
         private void RedrawRows()
         {
-            var bottom_row = Console.WindowHeight - 1;
-            var safe_row = Math.Max(TopRow, bottom_row - 1);
+            var capacity = ContentCapacity();
+            var content_end_row = TopRow + Math.Max(0, Math.Min(capacity, VisibleCapacity()) - 1);
+            var safe_row = TopRow + Math.Max(0, VisibleCapacity() - 1);
+
+            var start = ScrollOffset >= 0 ? Math.Min(ScrollOffset, Rows.Count) : Math.Max(0, Rows.Count - capacity);
             var row = TopRow;
 
-            foreach (var parts in Rows)
+            for (var i = start; i < Rows.Count && row <= content_end_row; i++)
             {
-                RewriteRow(row, parts);
+                RewriteRow(row, Rows[i]);
                 row++;
             }
 

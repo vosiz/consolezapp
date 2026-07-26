@@ -46,6 +46,8 @@ See [Roadmap](#roadmap) for full details.
 - [x] Colored prompt, keyword highlighting and input recoloring
 - [x] Configurable header border (chars + color)
 - [x] Live console width + dynamic resize/redraw
+- [x] Windows 7 console compatibility (TrueType font detection, ASCII border fallback)
+- [x] Reviewable Body scrollback (PageUp/PageDown, mouse wheel)
 - [ ] Menu
 
 ## Test projects

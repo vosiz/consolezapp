@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ConsoleZapp.Interop;
 
 namespace ConsoleZapp
 {
@@ -30,6 +31,12 @@ namespace ConsoleZapp
             // console output still goes through Console.Out with the process's OutputEncoding - without forcing UTF-8 here, writing e.g. "€" back out falls back to '?' on most OEM codepages
             Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
+            // on a raster (bitmap) console font (the common Windows 7 default), multi-byte UTF-8 box-drawing glyphs get decoded byte-by-byte as separate garbage glyphs instead of one character - degrade to ASCII borders instead of rendering garbage
+            if (ConsoleFont.IsRasterFont())
+                Header.UseAsciiBorders();
+
+            RemoveScrollback();
+
             // row tracking assumes the header starts at absolute row 0 - clearing first guarantees that, regardless of what was on screen before this call
             Console.Clear();
 
@@ -55,9 +62,23 @@ namespace ConsoleZapp
             LastWidth = width;
             LastHeight = height;
 
+            RemoveScrollback();
+
             Console.Clear();
             Header.Print(width);
             Body?.Redraw(Header.GetHeight());
+        }
+
+        // Shrinks the console's screen buffer down to exactly the visible window, eliminating native scrollback.
+        // Without this, manually scrolling the console (mouse wheel/scrollbar) drags the header along too, since it's just a fixed position in one flat buffer.
+        // Conhost also auto-snaps the view back whenever the app writes to a row currently scrolled out of sight, which looks like the header jumping around mid-write.
+        // Body's own retained-row redraw already reconstructs anything worth keeping, so no real history is lost by dropping the OS-level scrollback.
+        private static void RemoveScrollback()
+        {
+            if (Console.IsOutputRedirected)
+                return;
+
+            Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
         }
 
         // Re-renders a single header control in place, defaults to "main" container
@@ -118,6 +139,12 @@ namespace ConsoleZapp
         public void SetPromptColor(Cli.Conclr fg, Cli.Conclr bg)
         {
             Body?.SetPromptColor(fg, bg);
+        }
+
+        // Sets the body's scroll mode (Manual/AutoScroll - see ScrollMode), if a body is set
+        public void SetScrollMode(ScrollMode mode)
+        {
+            Body?.SetScrollMode(mode);
         }
 
         // Registers an exact keyword that gets highlighted wherever it occurs in typed input, if a body is set
