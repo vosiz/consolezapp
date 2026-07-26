@@ -49,6 +49,11 @@ namespace ConsoleZapp
             PromptForeground = fg;
             PromptBackground = bg;
         }
+        // As a single bundled pair
+        public void SetPromptColor(ColorPair pair)
+        {
+            SetPromptColor(pair.Foreground, pair.Background);
+        }
 
         // Sets what happens to a mid-review scroll position when new content is written - Manual (default) keeps it fixed, AutoScroll snaps back to the live tail on every write
         public void SetScrollMode(ScrollMode mode)

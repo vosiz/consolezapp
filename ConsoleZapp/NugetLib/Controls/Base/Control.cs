@@ -26,6 +26,11 @@ namespace ConsoleZapp
             Foreground = fg;
             Background = bg;
         }
+        // As a single bundled pair
+        public void SetColor(ColorPair pair)
+        {
+            SetColor(pair.Foreground, pair.Background);
+        }
 
         // Sets whether the background color fills the whole row up to the box border, or just the text
         public void SetFillRowBackground(bool fill)

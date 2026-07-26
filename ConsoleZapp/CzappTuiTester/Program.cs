@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using ConsoleZapp;
 
 namespace CzappTuiTester
@@ -31,6 +35,9 @@ namespace CzappTuiTester
         // Typing this command lists every command the sandbox currently has
         private const string HelpCommand = "help";
 
+        // Typing this command re-colors the "ColorPreset" header row with a randomly picked ColorPresets entry
+        private const string RandomClrCommand = "randomclr";
+
         // Total tokens for the RichText usage test, used/total turn red past 50% of this, green otherwise
         private const int TotalTokens = 50;
 
@@ -45,6 +52,38 @@ namespace CzappTuiTester
 
         // Classic lorem-ipsum filler words, cycled to build lines of varying length
         private static readonly string[] LOREM_WORDS = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua".Split(' ');
+
+        // Every ColorPresets field, name -> (canonical name, pair), keyed case-insensitively so typed commands match regardless of case
+        private static readonly Dictionary<string, (string Name, ColorPair Pair)> PRESETS = BuildPresets();
+
+        // Shared randomizer for the "randomclr" command and the initial pick at startup
+        private static readonly Random RNG = new Random();
+
+        // Reflects over ColorPresets' public static fields to build the command lookup
+        static Dictionary<string, (string Name, ColorPair Pair)> BuildPresets()
+        {
+            var presets = new Dictionary<string, (string Name, ColorPair Pair)>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var field in typeof(ColorPresets).GetFields(BindingFlags.Public | BindingFlags.Static))
+                presets[field.Name] = (field.Name, (ColorPair)field.GetValue(null));
+
+            return presets;
+        }
+
+        // Updates the "ColorPreset" header row: the name colored by the given pair, then the same name again in the console's default colors, so it stays readable even if the pair itself is a low-contrast combination
+        static void UpdatePresetRow(RichText control, string name, ColorPair pair)
+        {
+            control.AddText("label", "ColorPreset: ");
+            control.AddText("value", pair, name);
+            control.AddText("readable", " - {0}", name);
+        }
+
+        // Picks a random ColorPresets entry and applies it to the "ColorPreset" row - shared by the "randomclr" command and the initial pick at startup
+        static void ApplyRandomPreset(RichText control)
+        {
+            var picked = PRESETS.Values.ElementAt(RNG.Next(PRESETS.Count));
+            UpdatePresetRow(control, picked.Name, picked.Pair);
+        }
 
         // Updates the RichText usage control's parts, recoloring only the used part red past 50% usage, green otherwise
         static void UpdateTokensParts(RichText control, int used, int total)
@@ -76,7 +115,7 @@ namespace CzappTuiTester
         {
             var commands = new[] {
                 HelpCommand, ExitCommand, LongLineCommand, TokensCommand, SpecialCharsCommand,
-                LoremCommand, ScrollModeCommand,
+                LoremCommand, ScrollModeCommand, RandomClrCommand,
             };
 
             tui.WriteLine("Commands: {0}", string.Join(", ", commands));
@@ -105,6 +144,10 @@ namespace CzappTuiTester
             var tokens = header.AddControl("tokens", new RichText());
             var tokens_used = 0;
             UpdateTokensParts(tokens, tokens_used, TotalTokens);
+
+            // ColorPresets command test: colored name + readable fallback, set to a random preset at startup and by any typed preset name or "randomclr"
+            var preset_row = header.AddControl("preset", new RichText());
+            ApplyRandomPreset(preset_row);
 
             // No width passed: Tui reads the console's live width at Print() time (resize the
             // window before starting to see it reflected in the header border)
@@ -159,6 +202,16 @@ namespace CzappTuiTester
                 }
                 else if (command == HelpCommand)
                     PrintHelp(tui);
+                else if (command == RandomClrCommand)
+                {
+                    ApplyRandomPreset(preset_row);
+                    tui.UpdateControl("preset");
+                }
+                else if (command != null && PRESETS.TryGetValue(command, out var matched_preset))
+                {
+                    UpdatePresetRow(preset_row, matched_preset.Name, matched_preset.Pair);
+                    tui.UpdateControl("preset");
+                }
                 else if (command != ExitCommand)
                     tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);
 

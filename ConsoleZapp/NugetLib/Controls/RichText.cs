@@ -27,8 +27,12 @@ namespace ConsoleZapp
         {
             Parts[key] = new Part { Text = string.Format(fmt, args), Foreground = fg, Background = bg };
         }
-
-        // Adds or replaces a plain (uncolored) part under the given key
+        // As a single bundled pair
+        public void AddText(string key, ColorPair pair, string fmt, params object[] args)
+        {
+            AddText(key, pair.Foreground, pair.Background, fmt, args);
+        }
+        // Without a color (uncolored)
         public void AddText(string key, string fmt, params object[] args)
         {
             AddText(key, null, null, fmt, args);
@@ -43,6 +47,11 @@ namespace ConsoleZapp
             part.Foreground = fg;
             part.Background = bg;
             Parts[key] = part;
+        }
+        // As a single bundled pair
+        public void SetPartColor(string key, ColorPair pair)
+        {
+            SetPartColor(key, pair.Foreground, pair.Background);
         }
     }
 }
