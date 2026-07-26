@@ -24,6 +24,9 @@ namespace CzappTuiTester
         // Typing this command writes a batch of lorem-ipsum filler lines at once, to check body scrolling/redraw with a large volume of lines in one go
         private const string LoremCommand = "lorem";
 
+        // Typing this command toggles Body's ScrollMode, to compare Manual (position pinned while reviewing) vs AutoScroll (always follows new content) - test with PageUp then "lorem"
+        private const string ScrollModeCommand = "scrollmode";
+
         // Typing one of these severities updates the "Last state" header control to match its color
         private const string InfoCommand = "info";
         private const string WarnCommand = "warn";
@@ -174,6 +177,7 @@ namespace CzappTuiTester
             string command;
 
             var progress = (Progress)header.GetControl("progress");
+            var scroll_mode = ScrollMode.Manual;
 
             do
             {
@@ -195,6 +199,12 @@ namespace CzappTuiTester
                 {
                     for (var i = 1; i <= LoremLineCount; i++)
                         tui.WriteLine(BuildLoremLine(i));
+                }
+                else if (command == ScrollModeCommand)
+                {
+                    scroll_mode = scroll_mode == ScrollMode.Manual ? ScrollMode.AutoScroll : ScrollMode.Manual;
+                    tui.SetScrollMode(scroll_mode);
+                    tui.WriteLine("Scroll mode: {0}", scroll_mode);
                 }
                 else if (command != ExitCommand)
                     tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);

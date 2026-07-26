@@ -141,6 +141,12 @@ namespace ConsoleZapp
             Body?.SetPromptColor(fg, bg);
         }
 
+        // Sets the body's scroll mode (Manual/AutoScroll - see ScrollMode), if a body is set
+        public void SetScrollMode(ScrollMode mode)
+        {
+            Body?.SetScrollMode(mode);
+        }
+
         // Registers an exact keyword that gets highlighted wherever it occurs in typed input, if a body is set
         public void AddKeywordColor(string keyword, Cli.Conclr fg, Cli.Conclr bg)
         {
