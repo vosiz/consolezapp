@@ -35,6 +35,8 @@ namespace ConsoleZapp
             if (ConsoleFont.IsRasterFont())
                 Header.UseAsciiBorders();
 
+            RemoveScrollback();
+
             // row tracking assumes the header starts at absolute row 0 - clearing first guarantees that, regardless of what was on screen before this call
             Console.Clear();
 
@@ -60,9 +62,23 @@ namespace ConsoleZapp
             LastWidth = width;
             LastHeight = height;
 
+            RemoveScrollback();
+
             Console.Clear();
             Header.Print(width);
             Body?.Redraw(Header.GetHeight());
+        }
+
+        // Shrinks the console's screen buffer down to exactly the visible window, eliminating native scrollback.
+        // Without this, manually scrolling the console (mouse wheel/scrollbar) drags the header along too, since it's just a fixed position in one flat buffer.
+        // Conhost also auto-snaps the view back whenever the app writes to a row currently scrolled out of sight, which looks like the header jumping around mid-write.
+        // Body's own retained-row redraw already reconstructs anything worth keeping, so no real history is lost by dropping the OS-level scrollback.
+        private static void RemoveScrollback()
+        {
+            if (Console.IsOutputRedirected)
+                return;
+
+            Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
         }
 
         // Re-renders a single header control in place, defaults to "main" container
