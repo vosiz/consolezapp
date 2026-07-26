@@ -10,6 +10,11 @@
 - fix: surrogate-pair-aware cursor movement/backspace/delete in ReadCommand
 - fix: RecolorLastInput missing resize check
 - cleanup: shared ColorWriter helper, OrderedMap for deterministic container/control ordering
+- addition: Windows 7 TrueType console font detection, ASCII border fallback when unavailable
+- fix: header rows physically doubling in height on full-width writes
+- fix: native console scrollback dragging the header out of place, now fully suppressed
+- addition: Body reviewable scrollback (PageUp/PageDown, Body.SetScrollMode/ScrollMode)
+- addition: mouse wheel scroll for Body history (synthesizes PageUp/PageDown)
 
 ## History
 ### 1.6.0 - Control, prompt and border coloring
