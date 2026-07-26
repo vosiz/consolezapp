@@ -135,6 +135,13 @@ namespace ConsoleZapp
             return Body?.ReadCommand();
         }
 
+        // Prints the dialog and reads a matching answer, if a body is set - see Body.ReadDialog
+        public DialogOption? ReadDialog(Dialog dialog)
+        {
+            CheckResize();
+            return Body?.ReadDialog(dialog);
+        }
+
         // Sets the color the body's prompt is written in, if a body is set
         public void SetPromptColor(Cli.Conclr fg, Cli.Conclr bg)
         {

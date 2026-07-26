@@ -155,6 +155,24 @@ namespace ConsoleZapp
             return command;
         }
 
+        // Prints the dialog's question/options and reads a typed answer via ReadCommand, matching it case-insensitively against the dialog's options - on an unrecognized answer, prints a neutral "not recognized" line and re-prints the same question, looping until one matches
+        public DialogOption ReadDialog(Dialog dialog)
+        {
+            while (true)
+            {
+                foreach (var line in dialog.BuildLines())
+                    WriteLine("{0}", line);
+
+                var input = ReadCommand();
+                var matched = dialog.Match(input);
+
+                if (matched.HasValue)
+                    return matched.Value;
+
+                WriteLine("Not recognized - please choose one of the options above.");
+            }
+        }
+
         // Reads a line character-by-character via raw ReadConsoleInputW (Interop/ConsoleInput.cs) instead of Console.ReadLine/Console.ReadKey - keeps the cursor pinned to this row (no native wrap/scroll dragging the header), sidesteps ReadKey's lossy codepage translation, and picks up resize events immediately.
         // Renders at the live CurrentRow field so a mid-loop Body.Redraw() is picked up correctly on the next render.
         // PageUp/PageDown scroll through retained history instead of editing the line - rendered full-screen in place of the input row. Any other key snaps back to the live tail first (see ScrollOffset), then falls through to normal handling, so e.g. typing a character both exits review and gets typed.

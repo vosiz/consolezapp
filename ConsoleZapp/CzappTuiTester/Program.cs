@@ -27,6 +27,19 @@ namespace CzappTuiTester
         // Typing this command toggles Body's ScrollMode, to compare Manual (position pinned while reviewing) vs AutoScroll (always follows new content) - test with PageUp then "lorem"
         private const string ScrollModeCommand = "scrollmode";
 
+        // Typing this command runs a Dialog.YesNoCancel - accepts "y"/"yes", "n"/"no", "c"/"cancel", anything else loops with a re-prompt
+        private const string YesNoCommand = "yesno";
+
+        // Typing this command runs a Stacked-layout Dialog built from plain labels (auto-numbered "1".."3"), to check the multi-line rendering
+        private const string MenuCommand = "menu";
+
+        // Typing this command runs a Stacked-layout Dialog with a random number of options (2-5), each a random capitalized lorem word
+        private const string RandomMenuCommand = "randommenu";
+
+        // Bounds (inclusive) for the "randommenu" command's random option count
+        private const int RandomMenuMinOptions = 2;
+        private const int RandomMenuMaxOptions = 5;
+
         // Highlighted magenta wherever they occur in typed input (registered keyword-color test)
         private const string InfoCommand = "info";
         private const string WarnCommand = "warn";
@@ -110,12 +123,27 @@ namespace CzappTuiTester
             return string.Format("{0,2}: {1}", line_number, string.Join(" ", words));
         }
 
+        // Builds a random number (RandomMenuMinOptions..RandomMenuMaxOptions) of capitalized lorem-word labels, for the "randommenu" command
+        static string[] BuildRandomMenuLabels()
+        {
+            var count = RNG.Next(RandomMenuMinOptions, RandomMenuMaxOptions + 1);
+            var labels = new string[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                var word = LOREM_WORDS[RNG.Next(LOREM_WORDS.Length)];
+                labels[i] = char.ToUpperInvariant(word[0]) + word.Substring(1);
+            }
+
+            return labels;
+        }
+
         // Prints every command the sandbox currently has
         static void PrintHelp(Tui tui)
         {
             var commands = new[] {
                 HelpCommand, ExitCommand, LongLineCommand, TokensCommand, SpecialCharsCommand,
-                LoremCommand, ScrollModeCommand, RandomClrCommand,
+                LoremCommand, ScrollModeCommand, RandomClrCommand, YesNoCommand, MenuCommand, RandomMenuCommand,
             };
 
             tui.WriteLine("Commands: {0}", string.Join(", ", commands));
@@ -199,6 +227,23 @@ namespace CzappTuiTester
                     scroll_mode = scroll_mode == ScrollMode.Manual ? ScrollMode.AutoScroll : ScrollMode.Manual;
                     tui.SetScrollMode(scroll_mode);
                     tui.WriteLine("Scroll mode: {0}", scroll_mode);
+                }
+                else if (command == YesNoCommand)
+                {
+                    var choice = tui.ReadDialog(Dialog.YesNoCancel("Proceed with the risky operation?")).Value;
+                    tui.WriteLine("Dialog result: {0} ({1})", choice.Label, choice.Answers[0]);
+                }
+                else if (command == MenuCommand)
+                {
+                    var menu = new Dialog("Pick an action:", DialogLayout.Stacked, "Start", "Pause", "Stop");
+                    var choice = tui.ReadDialog(menu).Value;
+                    tui.WriteLine("Dialog result: {0} ({1})", choice.Label, choice.Answers[0]);
+                }
+                else if (command == RandomMenuCommand)
+                {
+                    var menu = new Dialog("Pick a random option:", DialogLayout.Stacked, BuildRandomMenuLabels());
+                    var choice = tui.ReadDialog(menu).Value;
+                    tui.WriteLine("Dialog result: {0} ({1})", choice.Label, choice.Answers[0]);
                 }
                 else if (command == HelpCommand)
                     PrintHelp(tui);
