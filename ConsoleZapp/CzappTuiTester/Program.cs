@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ConsoleZapp;
 
 namespace CzappTuiTester
@@ -11,11 +10,8 @@ namespace CzappTuiTester
         // Typing this command writes a line longer than the window width, to check overflow truncation
         private const string LongLineCommand = "long";
 
-        // Typing this command adds tokens to the usage counter, to test RichText per-part recoloring
-        private const string TokensCommand = "tok";
-
-        // Typing this command writes a body line with several independently colored parts
-        private const string TypesCommand = "types";
+        // Typing this command adds units to the usage counter, to test RichText per-part recoloring
+        private const string TokensCommand = "add10";
 
         // Typing this command writes a line with non-ASCII glyphs, to check they survive a scroll
         // without corrupting into replacement chars (the retained-buffer redraw fix)
@@ -27,10 +23,13 @@ namespace CzappTuiTester
         // Typing this command toggles Body's ScrollMode, to compare Manual (position pinned while reviewing) vs AutoScroll (always follows new content) - test with PageUp then "lorem"
         private const string ScrollModeCommand = "scrollmode";
 
-        // Typing one of these severities updates the "Last state" header control to match its color
+        // Highlighted magenta wherever they occur in typed input (registered keyword-color test)
         private const string InfoCommand = "info";
         private const string WarnCommand = "warn";
         private const string ErrorCommand = "error";
+
+        // Typing this command lists every command the sandbox currently has
+        private const string HelpCommand = "help";
 
         // Total tokens for the RichText usage test, used/total turn red past 50% of this, green otherwise
         private const int TotalTokens = 50;
@@ -57,48 +56,7 @@ namespace CzappTuiTester
             control.AddText("used", color, Cli.Conclr.DefBg, "{0}", used);
             control.AddText("sep", "/");
             control.AddText("total", "{0}", total);
-            control.AddText("unit", " tokens");
-        }
-
-        // Shared severity -> color mapping, used by both the "types" line and the "Last state" header control
-        static void GetSeverityColor(string severity, out Cli.Conclr fg, out Cli.Conclr bg)
-        {
-            switch (severity)
-            {
-                case InfoCommand:
-                    fg = Cli.Conclr.White;
-                    bg = Cli.Conclr.Green;
-                    break;
-                case WarnCommand:
-                    fg = Cli.Conclr.Black;
-                    bg = Cli.Conclr.Yellowd;
-                    break;
-                case ErrorCommand:
-                    fg = Cli.Conclr.White;
-                    bg = Cli.Conclr.Red;
-                    break;
-                default:
-                    fg = Cli.Conclr.DefFg;
-                    bg = Cli.Conclr.DefBg;
-                    break;
-            }
-        }
-
-        // Builds a "Types: info warn error" line, each severity independently colored, to test Body.WriteLine(Part[])
-        static List<Part> BuildTypesLine()
-        {
-            var parts = new List<Part> { new Part { Text = "Types: " } };
-
-            foreach (var severity in new[] { InfoCommand, WarnCommand, ErrorCommand })
-            {
-                if (parts.Count > 1)
-                    parts.Add(new Part { Text = " " });
-
-                GetSeverityColor(severity, out var fg, out var bg);
-                parts.Add(new Part { Text = severity, Foreground = fg, Background = bg });
-            }
-
-            return parts;
+            control.AddText("unit", " units");
         }
 
         // Builds a single numbered lorem-ipsum line of varying word count, for the "lorem" command's scrolling test
@@ -113,18 +71,15 @@ namespace CzappTuiTester
             return string.Format("{0,2}: {1}", line_number, string.Join(" ", words));
         }
 
-        // Updates the "Last state" header control's value part, coloring it to match the given severity
-        static void UpdateLastState(RichText control, string severity)
+        // Prints every command the sandbox currently has
+        static void PrintHelp(Tui tui)
         {
-            control.AddText("label", "Last state: ");
+            var commands = new[] {
+                HelpCommand, ExitCommand, LongLineCommand, TokensCommand, SpecialCharsCommand,
+                LoremCommand, ScrollModeCommand,
+            };
 
-            if (severity == null)
-                control.AddText("value", "unknown");
-            else
-            {
-                GetSeverityColor(severity, out var fg, out var bg);
-                control.AddText("value", fg, bg, severity);
-            }
+            tui.WriteLine("Commands: {0}", string.Join(", ", commands));
         }
 
         static void Main(string[] args)
@@ -132,7 +87,9 @@ namespace CzappTuiTester
             var header = new Header();
 
             header.AddControl("title", new Text()).SetText("CzappTuiTester");
-            header.AddControl("progress", new Progress("cmds")).SetTotal(0);
+            header.AddControl("hint", new Text()).SetText("Type 'help' to list all commands");
+            var cmds = header.AddControl("cmds", new Text());
+            cmds.SetText("Cmds: {0}", 0);
 
             // Color test: full-row background fill vs. text-only background
             var colored_full = header.AddControl("colored_full", new Text());
@@ -148,10 +105,6 @@ namespace CzappTuiTester
             var tokens = header.AddControl("tokens", new RichText());
             var tokens_used = 0;
             UpdateTokensParts(tokens, tokens_used, TotalTokens);
-
-            // RichText live update test: "Last state: unknown" recolors to match the last typed severity
-            var last_state = header.AddControl("last_state", new RichText());
-            UpdateLastState(last_state, null);
 
             // No width passed: Tui reads the console's live width at Print() time (resize the
             // window before starting to see it reflected in the header border)
@@ -176,7 +129,7 @@ namespace CzappTuiTester
 
             string command;
 
-            var progress = (Progress)header.GetControl("progress");
+            var cmd_count = 0;
             var scroll_mode = ScrollMode.Manual;
 
             do
@@ -190,9 +143,7 @@ namespace CzappTuiTester
                 if (command == LongLineCommand)
                     tui.WriteLine("Overflow test: {0}", new string('X', 200));
                 else if (command == TokensCommand)
-                    tui.WriteLine("Tokens used: {0}/{1}", tokens_used, TotalTokens);
-                else if (command == TypesCommand)
-                    tui.WriteLine(BuildTypesLine());
+                    tui.WriteLine("Units used: {0}/{1}", tokens_used, TotalTokens);
                 else if (command == SpecialCharsCommand)
                     tui.WriteLine("Special chars: ■■■ ⣿⣿⣿ (type a few more commands to scroll this line and check it stays intact)");
                 else if (command == LoremCommand)
@@ -206,6 +157,8 @@ namespace CzappTuiTester
                     tui.SetScrollMode(scroll_mode);
                     tui.WriteLine("Scroll mode: {0}", scroll_mode);
                 }
+                else if (command == HelpCommand)
+                    PrintHelp(tui);
                 else if (command != ExitCommand)
                     tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);
 
@@ -217,18 +170,12 @@ namespace CzappTuiTester
                     tui.UpdateControl("tokens");
                 }
 
-                // RichText live update test: recolor "Last state" to match the typed severity
-                if (command == InfoCommand || command == WarnCommand || command == ErrorCommand)
-                {
-                    UpdateLastState(last_state, command);
-                    tui.UpdateControl("last_state");
-                }
-
                 // Live header update test: bump the command count in place, without reprinting the header
                 if (command != ExitCommand)
                 {
-                    progress.PartsDone(1);
-                    tui.UpdateControl("progress");
+                    cmd_count++;
+                    cmds.SetText("Cmds: {0}", cmd_count);
+                    tui.UpdateControl("cmds");
                 }
 
             } while (command != ExitCommand);
