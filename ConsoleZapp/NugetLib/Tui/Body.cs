@@ -16,6 +16,15 @@ namespace ConsoleZapp
 
         private readonly List<Part> KeywordColors = new List<Part>();
 
+        // Every previously submitted non-empty command, oldest first - recalled via ConsoleKey.UpArrow/DownArrow in ReadLineFromKeys. Never trimmed, same "keep everything" approach as Rows.
+        private readonly List<string> History = new List<string>();
+
+        // Index into History currently shown while recalling; -1 means "not recalling" (the live in-progress line is shown instead)
+        private int HistoryIndex = -1;
+
+        // The in-progress line as it stood right before recall started, restored if the user arrows back down past the newest history entry
+        private string HistoryPendingLine;
+
         private string LastInputLine;
         private int LastInputRow = -1;
 
@@ -140,16 +149,22 @@ namespace ConsoleZapp
 
             Rows.Add(BuildCommandRowParts(command));
 
+            if (!string.IsNullOrEmpty(command))
+                History.Add(command);
+
             return command;
         }
 
         // Reads a line character-by-character via raw ReadConsoleInputW (Interop/ConsoleInput.cs) instead of Console.ReadLine/Console.ReadKey - keeps the cursor pinned to this row (no native wrap/scroll dragging the header), sidesteps ReadKey's lossy codepage translation, and picks up resize events immediately.
         // Renders at the live CurrentRow field so a mid-loop Body.Redraw() is picked up correctly on the next render.
         // PageUp/PageDown scroll through retained history instead of editing the line - rendered full-screen in place of the input row. Any other key snaps back to the live tail first (see ScrollOffset), then falls through to normal handling, so e.g. typing a character both exits review and gets typed.
+        // UpArrow/DownArrow instead recall previously submitted commands (see History/RecallHistory) - a separate feature from the PageUp/PageDown scrollback review above.
         private string ReadLineFromKeys()
         {
             var text = new StringBuilder();
             var cursor = 0;
+
+            HistoryIndex = -1;
 
             while (true)
             {
@@ -194,6 +209,19 @@ namespace ConsoleZapp
                     if (virtual_key == ConsoleKey.Enter)
                         return text.ToString();
 
+                    // UpArrow/DownArrow browse History instead of moving within the line
+                    if (virtual_key == ConsoleKey.UpArrow)
+                    {
+                        RecallHistory(-1, text, ref cursor);
+                        continue;
+                    }
+
+                    if (virtual_key == ConsoleKey.DownArrow)
+                    {
+                        RecallHistory(1, text, ref cursor);
+                        continue;
+                    }
+
                     ApplyKey(virtual_key, character, text, ref cursor);
                 }
             }
@@ -231,6 +259,45 @@ namespace ConsoleZapp
             var next_top = ScrollOffset + capacity;
 
             ScrollOffset = next_top >= live_top ? -1 : next_top;
+        }
+
+        // Moves through History by the given step (-1 towards older, +1 towards newer), replacing the in-progress line with the recalled entry - saves/restores the line being typed when recall starts/ends, and clamps at the oldest entry instead of wrapping
+        private void RecallHistory(int step, StringBuilder text, ref int cursor)
+        {
+            if (History.Count == 0)
+                return;
+
+            if (HistoryIndex < 0)
+            {
+                if (step > 0)
+                    return;
+
+                HistoryPendingLine = text.ToString();
+                HistoryIndex = History.Count - 1;
+            }
+            else
+            {
+                var next_index = HistoryIndex + step;
+
+                if (next_index >= History.Count)
+                {
+                    HistoryIndex = -1;
+                    SetLineText(text, ref cursor, HistoryPendingLine);
+                    return;
+                }
+
+                HistoryIndex = Math.Max(0, next_index);
+            }
+
+            SetLineText(text, ref cursor, History[HistoryIndex]);
+        }
+
+        // Replaces the in-progress line's full content, moving the cursor to the end
+        private static void SetLineText(StringBuilder text, ref int cursor, string value)
+        {
+            text.Clear();
+            text.Append(value);
+            cursor = text.Length;
         }
 
         // Applies a single decoded key press to the in-progress input line
