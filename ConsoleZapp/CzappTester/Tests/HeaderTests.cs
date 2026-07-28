@@ -29,5 +29,23 @@ namespace CzappTester.Tests
             Check.Throws<System.Collections.Generic.KeyNotFoundException>(() =>
                 header.AddControl("orphan", new Text(), "unknown"));
         }
+
+        public static void PrintWithOnlyForegroundPartColorDoesNotThrow()
+        {
+            var header = new Header();
+            var richText = header.AddControl("only_fg", new RichText());
+            richText.AddText("part", Cli.Conclr.Red, null, "Only foreground set");
+
+            header.Print(40);
+        }
+
+        public static void PrintWithOnlyBackgroundPartColorDoesNotThrow()
+        {
+            var header = new Header();
+            var richText = header.AddControl("only_bg", new RichText());
+            richText.AddText("part", null, Cli.Conclr.Blue, "Only background set");
+
+            header.Print(40);
+        }
     }
 }
