@@ -34,7 +34,7 @@ namespace ConsoleZapp
             }
             catch (Exception exc) {
 
-                throw new Exception("Line print exception", exc);
+                throw new PrintException("Line print exception", exc);
             }
         }
 
@@ -59,7 +59,7 @@ namespace ConsoleZapp
             }
             catch (Exception exc) {
 
-                throw new Exception("Line print exception", exc);
+                throw new PrintException("Headline print exception", exc);
             }
         }
 

@@ -81,5 +81,32 @@ namespace CzappTester.Tests.Controls
             percentage.Print();
             Console.WriteLine();
         }
+
+        public static void ClampsPercentAboveHundred()
+        {
+            var percentage = new Percentage("Progress");
+            percentage.SetValue(250);
+
+            Check.Equal(100f, percentage.Value);
+        }
+
+        public static void ClampsPercentBelowZero()
+        {
+            var percentage = new Percentage("Progress");
+            percentage.SetValue(-50);
+
+            Check.Equal(0f, percentage.Value);
+        }
+
+        public static void ClampsRatioOutsideZeroToOne()
+        {
+            var percentage = new Percentage("Progress");
+
+            percentage.SetValue(2.5f);
+            Check.Equal(100f, percentage.Value);
+
+            percentage.SetValue(-0.5f);
+            Check.Equal(0f, percentage.Value);
+        }
     }
 }

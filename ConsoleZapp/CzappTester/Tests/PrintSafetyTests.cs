@@ -36,6 +36,60 @@ namespace CzappTester.Tests.Basic
             }
         }
 
+        public static void SprintflnFailureReportsItsOwnName()
+        {
+            Cli.Print.WriteLine("Triggering Sprintfln() with a bad format on purpose (expect PrintException):");
+
+            PrintException caught = null;
+
+            try
+            {
+                Cli.Print.Sprintfln("Missing arg: {0} {1}", "only one");
+            }
+            catch (PrintException exc)
+            {
+                caught = exc;
+            }
+
+            Check.True(caught != null, "Expected PrintException to be thrown");
+            Check.True(caught.Message.StartsWith("Sprintfln failed"),
+                $"Expected message to start with 'Sprintfln failed', got: {caught.Message}");
+        }
+
+        public static void ClrprintflnFailureReportsItsOwnName()
+        {
+            Cli.Print.WriteLine("Triggering Clrprintfln() with a bad format on purpose (expect PrintException):");
+
+            PrintException caught = null;
+
+            try
+            {
+                Cli.Print.Clrprintfln(Cli.Conclr.Red, Cli.Conclr.DefBg, "Missing arg: {0} {1}", "only one");
+            }
+            catch (PrintException exc)
+            {
+                caught = exc;
+            }
+
+            Check.True(caught != null, "Expected PrintException to be thrown");
+            Check.True(caught.Message.StartsWith("Clrprintfln failed"),
+                $"Expected message to start with 'Clrprintfln failed', got: {caught.Message}");
+        }
+
+        public static void LineWithUnknownKeyThrowsPrintException()
+        {
+            Cli.Print.WriteLine("Triggering Line() with an unknown key on purpose (expect PrintException):");
+
+            Check.Throws<PrintException>(() => Cli.Print.Line("no_such_key"));
+        }
+
+        public static void HeadlineWithUnknownKeyThrowsPrintException()
+        {
+            Cli.Print.WriteLine("Triggering Headline() with an unknown key on purpose (expect PrintException):");
+
+            Check.Throws<PrintException>(() => Cli.Print.Headline("no_such_key", "text"));
+        }
+
         public static void EscapeHelpers()
         {
             var raw = "curly {braces} and \"quotes\" and a\nnewline";

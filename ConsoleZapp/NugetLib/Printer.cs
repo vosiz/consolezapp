@@ -36,21 +36,26 @@ namespace ConsoleZapp
         // Format string
         public void Sprintf(string fmt, params object[] args)
         {
+            SprintfCore("Sprintf", fmt, args);
+        }
+
+        // Format string nl
+        public void Sprintfln(string fmt, params object[] args)
+        {
+            SprintfCore("Sprintfln", fmt + Environment.NewLine, args);
+        }
+
+        // Shared Sprintf/Sprintfln/Clrprintf* implementation - reports the actually-called method's own name on failure instead of always "Sprintf"
+        private void SprintfCore(string caller_name, string fmt, object[] args)
+        {
             try
             {
                 Console.Write(string.Format(fmt, args));
             }
             catch (Exception exc)
             {
-                throw new PrintException($"Sprintf failed, fmt: {fmt}", exc);
+                throw new PrintException($"{caller_name} failed, fmt: {fmt}", exc);
             }
-        }
-
-        // Format string nl
-        public void Sprintfln(string fmt, params object[] args)
-        {
-            fmt += Environment.NewLine;
-            Sprintf(fmt, args);
         }
 
         // Prints blank line(s)

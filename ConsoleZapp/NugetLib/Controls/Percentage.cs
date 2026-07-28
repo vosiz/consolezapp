@@ -1,3 +1,4 @@
+using System;
 using Commons = Vosiz.Commons;
 
 namespace ConsoleZapp
@@ -17,16 +18,16 @@ namespace ConsoleZapp
             Label = label;
         }
 
-        // Sets percent value (0-100)
+        // Sets percent value (0-100), clamped to that range
         public void SetValue(int percent)
         {
-            Value = percent;
+            Value = Math.Max(0f, Math.Min(100f, percent));
         }
 
-        // Sets percent value from a 0.0f-1.0f ratio
+        // Sets percent value from a 0.0f-1.0f ratio, clamped to that range
         public void SetValue(float ratio)
         {
-            Value = ratio * 100f;
+            Value = Math.Max(0f, Math.Min(100f, ratio * 100f));
         }
 
         // Renders control content, whole numbers

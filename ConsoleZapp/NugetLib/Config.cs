@@ -10,7 +10,7 @@ namespace ConsoleZapp
         public class Coloring {
 
             public Cli.Conclr Foreground = Cli.Conclr.DefaultForeground;
-            public Cli.Conclr Background = Cli.Conclr.DefaultForeground;
+            public Cli.Conclr Background = Cli.Conclr.DefaultBackground;
 
             public Coloring(Cli.Conclr text, Cli.Conclr back) {
 
@@ -94,7 +94,7 @@ namespace ConsoleZapp
                             break;
 
                         default:
-                            throw new NotImplementedException("Unimplemnted state");
+                            throw new NotImplementedException("Unimplemented state");
                     }
                 }
                 catch (Exception exc)

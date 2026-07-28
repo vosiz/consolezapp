@@ -159,5 +159,23 @@ namespace CzappTester.Tests.Controls
             foreach (BarColor color in Enum.GetValues(typeof(BarColor)))
                 Cli.Print.WriteLine("{0} -> {1}", color, color.ToConsoleColor());
         }
+
+        public static void NegativeMarginDoesNotThrow()
+        {
+            var bar = new ProgressBar("Margin");
+            bar.SetProgress(0.5f);
+            bar.SetMargin(-5);
+
+            Cli.Print.WriteLine(bar.Render());
+        }
+
+        public static void NegativeDecimalsDoesNotThrow()
+        {
+            var bar = new ProgressBar("Decimals");
+            bar.SetProgress(0.5f);
+            bar.SetDecimals(-3);
+
+            Cli.Print.WriteLine(bar.Render());
+        }
     }
 }

@@ -5,7 +5,7 @@ namespace ConsoleZapp
 {
     public class RichText : Control
     {
-        private readonly Dictionary<string, Part> Parts = new Dictionary<string, Part>();
+        private readonly OrderedMap<Part> Parts = new OrderedMap<Part>();
 
         // Constructor
         public RichText() { }
@@ -25,7 +25,7 @@ namespace ConsoleZapp
         // Adds or replaces a colored part under the given key
         public void AddText(string key, Cli.Conclr? fg, Cli.Conclr? bg, string fmt, params object[] args)
         {
-            Parts[key] = new Part { Text = string.Format(fmt, args), Foreground = fg, Background = bg };
+            Parts.Set(key, new Part { Text = string.Format(fmt, args), Foreground = fg, Background = bg });
         }
         // As a single bundled pair
         public void AddText(string key, ColorPair pair, string fmt, params object[] args)
@@ -46,7 +46,7 @@ namespace ConsoleZapp
 
             part.Foreground = fg;
             part.Background = bg;
-            Parts[key] = part;
+            Parts.Set(key, part);
         }
         // As a single bundled pair
         public void SetPartColor(string key, ColorPair pair)
