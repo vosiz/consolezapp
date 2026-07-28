@@ -52,17 +52,17 @@ namespace ConsoleZapp
         {
             foreach (var part in GetParts())
             {
-                var has_color = part.Foreground.HasValue;
+                var has_foreground = part.Foreground.HasValue;
+                var has_background = part.Background.HasValue;
 
-                if (has_color)
-                {
+                if (has_foreground)
                     Console.ForegroundColor = (ConsoleColor)part.Foreground.Value;
+                if (has_background)
                     Console.BackgroundColor = (ConsoleColor)part.Background.Value;
-                }
 
                 Console.Write(part.Text);
 
-                if (has_color)
+                if (has_foreground || has_background)
                     Console.ResetColor();
             }
         }

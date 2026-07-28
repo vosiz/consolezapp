@@ -1,3 +1,5 @@
+using System;
+
 namespace ConsoleZapp
 {
     public class Header
@@ -8,6 +10,15 @@ namespace ConsoleZapp
         public Header()
         {
             Containers.Set("main", new Container());
+        }
+
+        // Adds a new container, printed after previously added containers - throws if the id is already taken (including "main")
+        public void AddContainer(string container_id)
+        {
+            if (Containers.TryGetValue(container_id, out _))
+                throw new ArgumentException($"Container ({container_id}) already exists");
+
+            Containers.Set(container_id, new Container());
         }
 
         // Adds a control to the given container, defaults to "main"

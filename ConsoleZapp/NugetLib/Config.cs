@@ -140,7 +140,7 @@ namespace ConsoleZapp
         // Add new headline
         public void AddLine(string key, Line lining) {
 
-            if (Colorings.ContainsKey(key))
+            if (Lining.ContainsKey(key))
                 throw new ArgumentException($"Key ({key}) already exists");
 
             Lining.Add(key, lining);

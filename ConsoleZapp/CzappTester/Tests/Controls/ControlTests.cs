@@ -24,5 +24,23 @@ namespace CzappTester.Tests.Controls
             labeled.SetWidth(20);
             Cli.Print.WriteLine(labeled.Render());
         }
+
+        public static void PrintWithOnlyForegroundSetDoesNotThrow()
+        {
+            var text = new RichText();
+            text.AddText("part", Cli.Conclr.Red, null, "Only foreground set");
+
+            text.Print();
+            Console.WriteLine();
+        }
+
+        public static void PrintWithOnlyBackgroundSetDoesNotThrow()
+        {
+            var text = new RichText();
+            text.AddText("part", null, Cli.Conclr.Blue, "Only background set");
+
+            text.Print();
+            Console.WriteLine();
+        }
     }
 }
