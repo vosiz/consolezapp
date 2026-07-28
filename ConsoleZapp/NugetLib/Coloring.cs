@@ -19,7 +19,6 @@ namespace ConsoleZapp
 
             Console.ResetColor();
         }
-
         // Prints colored text by key
         public void Clrprintf(string coloringkey, string fmt, params object[] args) {
 
@@ -37,7 +36,6 @@ namespace ConsoleZapp
 
             Console.ResetColor();
         }
-
         // Prints colored text with new line using key
         public void Clrprintfln(string coloringkey, string fmt, params object[] args) {
 

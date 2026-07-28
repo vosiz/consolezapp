@@ -5,8 +5,8 @@ namespace ConsoleZapp
 {
     public abstract class Control
     {
-        public const int MinWidth = 40;
-        public const int MaxWidth = 120;
+        public const int MIN_WIDTH = 40;
+        public const int MAX_WIDTH = 120;
 
         public Cli.Conclr? Foreground { get; private set; }
         public Cli.Conclr? Background { get; private set; }
@@ -14,28 +14,13 @@ namespace ConsoleZapp
 
         protected int Width = 80;
 
+        // Constructor
+        protected Control() { }
+
         // Sets the render width available to the control, clamped to a sane range
         public virtual void SetWidth(int width)
         {
-            Width = Math.Max(MinWidth, Math.Min(MaxWidth, width));
-        }
-
-        // Sets the control's foreground/background color
-        public void SetColor(Cli.Conclr fg, Cli.Conclr bg)
-        {
-            Foreground = fg;
-            Background = bg;
-        }
-        // As a single bundled pair
-        public void SetColor(ColorPair pair)
-        {
-            SetColor(pair.Foreground, pair.Background);
-        }
-
-        // Sets whether the background color fills the whole row up to the box border, or just the text
-        public void SetFillRowBackground(bool fill)
-        {
-            FillRowBackground = fill;
+            Width = Math.Max(MIN_WIDTH, Math.Min(MAX_WIDTH, width));
         }
 
         // Renders control content
@@ -65,6 +50,24 @@ namespace ConsoleZapp
                 if (has_foreground || has_background)
                     Console.ResetColor();
             }
+        }
+
+        // Sets the control's foreground/background color
+        public void SetColor(Cli.Conclr fg, Cli.Conclr bg)
+        {
+            Foreground = fg;
+            Background = bg;
+        }
+        // As a single bundled pair
+        public void SetColor(ColorPair pair)
+        {
+            SetColor(pair.Foreground, pair.Background);
+        }
+
+        // Sets whether the background color fills the whole row up to the box border, or just the text
+        public void SetFillRowBackground(bool fill)
+        {
+            FillRowBackground = fill;
         }
     }
 }

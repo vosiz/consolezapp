@@ -12,12 +12,13 @@ namespace ConsoleZapp
             public Cli.Conclr Foreground = Cli.Conclr.DefaultForeground;
             public Cli.Conclr Background = Cli.Conclr.DefaultBackground;
 
+            // Constructor with foreground/background
             public Coloring(Cli.Conclr text, Cli.Conclr back) {
 
                 Foreground = text;
                 Background = back;
             }
-
+            // Default colors
             public Coloring() : this(Cli.Conclr.DefFg, Cli.Conclr.DefBg) { }
 
         }
@@ -30,29 +31,7 @@ namespace ConsoleZapp
 
         public class Line {
 
-            public static readonly int MaxWidth = 80;
-
-            public static Line Create(char line, char corner, int width) {
-
-                var l = new Line();
-                l.LineChar = line;
-                l.LineCorner = corner;
-                l.LineLength = width;
-
-                return l;
-            }
-
-            public static Line CreateCustom(string fmt, Coloring coloring = null) {
-
-                var l = new Line();
-                l.Format = fmt;
-                l.Type = LineType.Custom;
-                if (coloring != null)
-                    l.Coloring = coloring;
-
-                return l;
-            }
-
+            public const int MAX_WIDTH = 80;
 
             public LineType Type { get; private set; } = LineType.General;
             public Coloring Coloring { get; private set; } = new Coloring();
@@ -65,8 +44,32 @@ namespace ConsoleZapp
 
             public char LineChar { get; private set; } = '=';
             public char LineCorner { get; private set; } = '+';
-            public int LineLength { get; private set; } = MaxWidth;
+            public int LineLength { get; private set; } = MAX_WIDTH;
 
+            // Creates a general corner-line-corner line
+            public static Line Create(char line, char corner, int width) {
+
+                var l = new Line();
+                l.LineChar = line;
+                l.LineCorner = corner;
+                l.LineLength = width;
+
+                return l;
+            }
+
+            // Creates a fully custom-formatted line
+            public static Line CreateCustom(string fmt, Coloring coloring = null) {
+
+                var l = new Line();
+                l.Format = fmt;
+                l.Type = LineType.Custom;
+                if (coloring != null)
+                    l.Coloring = coloring;
+
+                return l;
+            }
+
+            // Formats the line according to its type
             public override string ToString() {
 
                 string tostr = string.Empty;
@@ -127,6 +130,9 @@ namespace ConsoleZapp
                 { "2", Line.Create('-', '+', 24)},
         };
 
+
+        // Constructor
+        public Config() { }
 
         // Adds new coloring
         public void AddColoring(string key, Coloring coloring) {

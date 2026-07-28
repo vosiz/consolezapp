@@ -6,7 +6,8 @@ namespace ConsoleZapp
 {
     public class ProgressBar : Control
     {
-        private static readonly Commons.Unit PercentUnit = new Commons.Unit("%", Commons.UnitSymbolPlacement.AfterWithSpace, true);
+        private static readonly Commons.Unit PERCENT_UNIT =
+            new Commons.Unit("%", Commons.UnitSymbolPlacement.AfterWithSpace, true);
 
         public float Progress { get; private set; }
 
@@ -38,19 +39,49 @@ namespace ConsoleZapp
             SetWidth(width);
         }
 
+        // Renders control content
+        public override string Render()
+        {
+            var layout = ComputeLayout();
+
+            var bar = new string(FullChar, layout.fill_length) + new string(EmptyChar, layout.empty_length);
+            var margin = new string(' ', Margin);
+
+            return $"{margin}{Label} [{bar}] {layout.percent_text}{margin}";
+        }
+
+        // Renders and writes the bar directly to the console, applying per-segment colors
+        public override void Print()
+        {
+            // matches Tui.Print()'s UTF-8 setup - ProgressBar can be printed standalone, outside a Tui, where nothing else would set this for FullChar's default box-drawing glyph
+            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+            var layout = ComputeLayout();
+            var margin = new string(' ', Margin);
+
+            Console.Write(margin);
+            WriteColored(Label, LabelColor);
+            Console.Write(" ");
+            WriteColored("[", BracketColor);
+            WriteColored(new string(FullChar, layout.fill_length), FullColor);
+            WriteColored(new string(EmptyChar, layout.empty_length), EmptyColor);
+            WriteColored("]", BracketColor);
+            Console.Write(" ");
+            WriteColored(layout.percent_text, PercentColor);
+            Console.Write(margin);
+        }
+
         // Sets progress using a 0f-1f fraction
         public void SetProgress(float fraction)
         {
             Progress = Math.Max(0f, Math.Min(1f, fraction));
         }
-
-        // Sets progress using a 0-100 percent value
+        // Using a 0-100 percent value
         public void SetProgress(int percent)
         {
             SetProgress(percent / 100f);
         }
-
-        // Sets progress from a value within a min-max range
+        // From a value within a min-max range
         public void SetProgress(double value, double min, double max)
         {
             SetProgress((float)((value - min) / (max - min)));
@@ -110,43 +141,11 @@ namespace ConsoleZapp
             FullColor = color;
         }
 
-        // Renders control content
-        public override string Render()
-        {
-            var layout = ComputeLayout();
-
-            var bar = new string(FullChar, layout.fill_length) + new string(EmptyChar, layout.empty_length);
-            var margin = new string(' ', Margin);
-
-            return $"{margin}{Label} [{bar}] {layout.percent_text}{margin}";
-        }
-
-        // Renders and writes the bar directly to the console, applying per-segment colors
-        public override void Print()
-        {
-            // matches Tui.Print()'s UTF-8 setup - ProgressBar can be printed standalone, outside a Tui, where nothing else would set this for FullChar's default box-drawing glyph
-            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-
-            var layout = ComputeLayout();
-            var margin = new string(' ', Margin);
-
-            Console.Write(margin);
-            WriteColored(Label, LabelColor);
-            Console.Write(" ");
-            WriteColored("[", BracketColor);
-            WriteColored(new string(FullChar, layout.fill_length), FullColor);
-            WriteColored(new string(EmptyChar, layout.empty_length), EmptyColor);
-            WriteColored("]", BracketColor);
-            Console.Write(" ");
-            WriteColored(layout.percent_text, PercentColor);
-            Console.Write(margin);
-        }
-
         // Computes the percent text and bar-fill split shared by Render() and Print()
         private (string percent_text, int fill_length, int empty_length) ComputeLayout()
         {
             var percent = Progress * 100f;
-            var percent_text = new Commons.Quantity(Label, PercentUnit, percent).ToString(Decimals);
+            var percent_text = new Commons.Quantity(Label, PERCENT_UNIT, percent).ToString(Decimals);
 
             var fixed_length = (Margin * 2) + Label.Length + 4 + percent_text.Length;
             var bar_width = Math.Max(0, Width - fixed_length);

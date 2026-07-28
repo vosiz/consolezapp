@@ -19,8 +19,7 @@ namespace ConsoleZapp
 
             Line(level.ToString());
         }
-
-        // Print line by key
+        // By key
         public void Line(string key) {
 
             try
@@ -43,8 +42,7 @@ namespace ConsoleZapp
 
             Headline(level.ToString(), headline);
         }
-
-        // Prints headline by key
+        // By key
         public void Headline(string key, params string[] str_pars) {
 
             try

@@ -42,6 +42,7 @@ namespace ConsoleZapp
         public static Printer Print { get; private set; }
         public static Config Config { get; private set; }
 
+        // Initializes Cli with the given config, or a default one if none is given
         public static void Init(Config config = null)
         {
             Config = config;

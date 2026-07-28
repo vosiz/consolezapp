@@ -4,12 +4,6 @@ namespace ConsoleZapp
 {
     internal class OrderedMap<TValue>
     {
-        private readonly Dictionary<string, TValue> Map = new Dictionary<string, TValue>();
-        private readonly List<string> Order = new List<string>();
-
-        // Constructor
-        public OrderedMap() { }
-
         // Gets the value for the given key, throwing if it isn't present
         public TValue this[string key]
         {
@@ -37,6 +31,12 @@ namespace ConsoleZapp
                     yield return Map[key];
             }
         }
+
+        private readonly Dictionary<string, TValue> Map = new Dictionary<string, TValue>();
+        private readonly List<string> Order = new List<string>();
+
+        // Constructor
+        public OrderedMap() { }
 
         // Adds a new key or updates an existing one's value in place - new keys are appended to the end of iteration order, existing keys keep their original position
         public void Set(string key, TValue value)

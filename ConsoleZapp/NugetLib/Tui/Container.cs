@@ -4,12 +4,12 @@ namespace ConsoleZapp
 {
     public class Container
     {
-        private char BorderHorizontal = '─';
-        private char BorderVertical = '│';
-        private char BorderTopLeft = '┌';
-        private char BorderTopRight = '┐';
-        private char BorderBottomLeft = '└';
-        private char BorderBottomRight = '┘';
+        private char BorderHorizontal   = '─';
+        private char BorderVertical     = '│';
+        private char BorderTopLeft      = '┌';
+        private char BorderTopRight     = '┐';
+        private char BorderBottomLeft   = '└';
+        private char BorderBottomRight  = '┘';
 
         private Cli.Conclr? BorderForeground;
         private Cli.Conclr? BorderBackground;

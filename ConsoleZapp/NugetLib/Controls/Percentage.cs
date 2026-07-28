@@ -5,7 +5,7 @@ namespace ConsoleZapp
 {
     public class Percentage : Control
     {
-        private static readonly Commons.Unit PercentUnit = 
+        private static readonly Commons.Unit PERCENT_UNIT =
             new Commons.Unit("%", Commons.UnitSymbolPlacement.AfterWithSpace, true);
 
         public float Value { get; private set; }
@@ -18,29 +18,27 @@ namespace ConsoleZapp
             Label = label;
         }
 
-        // Sets percent value (0-100), clamped to that range
-        public void SetValue(int percent)
-        {
-            Value = Math.Max(0f, Math.Min(100f, percent));
-        }
-
-        // Sets percent value from a 0.0f-1.0f ratio, clamped to that range
-        public void SetValue(float ratio)
-        {
-            Value = Math.Max(0f, Math.Min(100f, ratio * 100f));
-        }
-
         // Renders control content, whole numbers
         public override string Render()
         {
             return Render(0);
         }
-
-        // Renders control content with given decimal places
+        // With given decimal places
         public string Render(int decimals)
         {
-            var quantity = new Commons.Quantity(Label, PercentUnit, Value);
+            var quantity = new Commons.Quantity(Label, PERCENT_UNIT, Value);
             return $"{Label}: {quantity.ToString(decimals)}";
+        }
+
+        // Sets percent value (0-100), clamped to that range
+        public void SetValue(int percent)
+        {
+            Value = Math.Max(0f, Math.Min(100f, percent));
+        }
+        // From a 0.0f-1.0f ratio
+        public void SetValue(float ratio)
+        {
+            Value = Math.Max(0f, Math.Min(100f, ratio * 100f));
         }
     }
 }

@@ -4,7 +4,7 @@ namespace ConsoleZapp
 {
     internal static class ColorWriter
     {
-        // Writes text at the current cursor position, coloring it if a foreground color is set, resetting afterwards
+        // Writes text at the current cursor position, applying whichever of fg/bg is set, resetting afterwards
         internal static void Write(Cli.Conclr? fg, Cli.Conclr? bg, string text)
         {
             var has_foreground = fg.HasValue;

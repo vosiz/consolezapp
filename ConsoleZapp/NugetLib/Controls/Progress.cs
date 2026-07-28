@@ -2,15 +2,26 @@ namespace ConsoleZapp
 {
     public class Progress : Control
     {
-        private readonly string PartSymbol;
-
         public int Current { get; private set; }
         public int Total { get; private set; }
+
+        private readonly string PartSymbol;
 
         // Constructor with optional part symbol
         public Progress(string part_symbol = null)
         {
             PartSymbol = part_symbol;
+        }
+
+        // Renders control content
+        public override string Render()
+        {
+            var rendered = $"{Current}/{Total}";
+
+            if (!string.IsNullOrEmpty(PartSymbol))
+                rendered += $" {PartSymbol}";
+
+            return rendered;
         }
 
         // Sets current value
@@ -29,17 +40,6 @@ namespace ConsoleZapp
         public void PartsDone(int count)
         {
             Current += count;
-        }
-
-        // Renders control content
-        public override string Render()
-        {
-            var rendered = $"{Current}/{Total}";
-
-            if (!string.IsNullOrEmpty(PartSymbol))
-                rendered += $" {PartSymbol}";
-
-            return rendered;
         }
     }
 }

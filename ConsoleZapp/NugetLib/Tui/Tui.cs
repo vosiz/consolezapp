@@ -14,6 +14,18 @@ namespace ConsoleZapp
         private int LastWidth = -1;
         private int LastHeight = -1;
 
+        // Shrinks the console's screen buffer down to exactly the visible window, eliminating native scrollback.
+        // Without this, manually scrolling the console (mouse wheel/scrollbar) drags the header along too, since it's just a fixed position in one flat buffer.
+        // Conhost also auto-snaps the view back whenever the app writes to a row currently scrolled out of sight, which looks like the header jumping around mid-write.
+        // Body's own retained-row redraw already reconstructs anything worth keeping, so no real history is lost by dropping the OS-level scrollback.
+        private static void RemoveScrollback()
+        {
+            if (Console.IsOutputRedirected)
+                return;
+
+            Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
+        }
+
         // Constructor with header, optional body and an optional fixed-width override; if width is omitted, Print() reads the console's live width instead of assuming a fixed one
         public Tui(Header header, Body body = null, int? width = null)
         {
@@ -69,18 +81,6 @@ namespace ConsoleZapp
             Body?.Redraw(Header.GetHeight());
         }
 
-        // Shrinks the console's screen buffer down to exactly the visible window, eliminating native scrollback.
-        // Without this, manually scrolling the console (mouse wheel/scrollbar) drags the header along too, since it's just a fixed position in one flat buffer.
-        // Conhost also auto-snaps the view back whenever the app writes to a row currently scrolled out of sight, which looks like the header jumping around mid-write.
-        // Body's own retained-row redraw already reconstructs anything worth keeping, so no real history is lost by dropping the OS-level scrollback.
-        private static void RemoveScrollback()
-        {
-            if (Console.IsOutputRedirected)
-                return;
-
-            Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
-        }
-
         // Re-renders a single header control in place, defaults to "main" container
         public void UpdateControl(string name, string container_id = "main")
         {
@@ -113,15 +113,13 @@ namespace ConsoleZapp
             CheckResize();
             Body?.WriteLine(fmt, args);
         }
-
-        // Writes a formatted line in the given colors to the body's scrolling area, if a body is set
+        // In the given colors
         public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
         {
             CheckResize();
             Body?.WriteLine(fg, bg, fmt, args);
         }
-
-        // Writes a line built from independently colored parts to the body's scrolling area, if a body is set
+        // Built from independently colored parts
         public void WriteLine(IEnumerable<Part> parts)
         {
             CheckResize();

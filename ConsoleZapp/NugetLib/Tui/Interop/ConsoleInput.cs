@@ -19,6 +19,11 @@ namespace ConsoleZapp.Interop
         private const int MAX_CONSECUTIVE_READ_FAILURES = 20;
         private const int READ_FAILURE_BACKOFF_MS = 50;
 
+        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+
+        private static IntPtr InputHandle;
+        private static bool WindowInputEnabled;
+
         [StructLayout(LayoutKind.Sequential)]
         private struct COORD
         {
@@ -88,11 +93,6 @@ namespace ConsoleZapp.Interop
             [Out] INPUT_RECORD[] lpBuffer,
             uint nLength,
             out uint lpNumberOfEventsRead);
-
-        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
-
-        private static IntPtr InputHandle;
-        private static bool WindowInputEnabled;
 
         internal readonly struct NativeKeyEvent
         {

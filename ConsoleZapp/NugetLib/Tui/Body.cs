@@ -43,6 +43,116 @@ namespace ConsoleZapp
         // True for the duration of ReadLineFromKeys - lets RedrawRows/ContentCapacity know to leave the bottom row free for the live-typed prompt instead of filling it with history
         private bool PromptActive;
 
+        // Replaces the in-progress line's full content, moving the cursor to the end
+        private static void SetLineText(StringBuilder text, ref int cursor, string value)
+        {
+            text.Clear();
+            text.Append(value);
+            cursor = text.Length;
+        }
+
+        // Applies a single decoded key press to the in-progress input line
+        private static void ApplyKey(ConsoleKey virtual_key, char character, StringBuilder text, ref int cursor)
+        {
+            switch (virtual_key)
+            {
+                case ConsoleKey.Backspace:
+                    if (cursor > 0)
+                    {
+                        var length = SurrogatePairWidthBefore(text, cursor);
+                        text.Remove(cursor - length, length);
+                        cursor -= length;
+                    }
+                    break;
+
+                case ConsoleKey.Delete:
+                    if (cursor < text.Length)
+                        text.Remove(cursor, SurrogatePairWidthAfter(text, cursor));
+                    break;
+
+                case ConsoleKey.LeftArrow:
+                    if (cursor > 0)
+                        cursor -= SurrogatePairWidthBefore(text, cursor);
+                    break;
+
+                case ConsoleKey.RightArrow:
+                    if (cursor < text.Length)
+                        cursor += SurrogatePairWidthAfter(text, cursor);
+                    break;
+
+                case ConsoleKey.Home:
+                    cursor = 0;
+                    break;
+
+                case ConsoleKey.End:
+                    cursor = text.Length;
+                    break;
+
+                default:
+                    if (!char.IsControl(character))
+                    {
+                        text.Insert(cursor, character);
+                        cursor++;
+                    }
+                    break;
+            }
+        }
+
+        // Returns 2 if the two chars immediately before the cursor form a surrogate pair, 1 otherwise - so Backspace/Left can't split a pair produced by ReadConsoleInputW
+        private static int SurrogatePairWidthBefore(StringBuilder text, int cursor)
+        {
+            if (cursor >= 2 && char.IsSurrogatePair(text[cursor - 2], text[cursor - 1]))
+                return 2;
+
+            return 1;
+        }
+
+        // Returns 2 if the two chars immediately after the cursor form a surrogate pair, 1 otherwise - so Delete/Right can't split a pair produced by ReadConsoleInputW
+        private static int SurrogatePairWidthAfter(StringBuilder text, int cursor)
+        {
+            if (cursor + 1 < text.Length && char.IsSurrogatePair(text[cursor], text[cursor + 1]))
+                return 2;
+
+            return 1;
+        }
+
+        // Truncates text that would overflow the window width, avoiding a native wrap/scroll on write
+        private static string ClampToWindowWidth(string text)
+        {
+            const string ELLIPSIS = "...";
+
+            var max_length = Console.WindowWidth - 1;
+
+            if (text.Length <= max_length)
+                return text;
+
+            var content_length = Math.Max(0, max_length - ELLIPSIS.Length);
+
+            return text.Substring(0, content_length) + ELLIPSIS;
+        }
+
+        // Clears a row, then writes the given parts into it from column 0, coloring each part per its own setting
+        private static void RewriteRow(int row, List<Part> parts)
+        {
+            ClearRow(row);
+            RenderParts(parts);
+        }
+
+        // Blanks a row without disturbing the cursor row itself, leaving the cursor at column 0
+        private static void ClearRow(int row)
+        {
+            Console.SetCursorPosition(0, row);
+            Console.Write(new string(' ', Console.WindowWidth - 1));
+            Console.SetCursorPosition(0, row);
+        }
+
+        // Writes parts at the current cursor position, coloring each part per its own setting
+        private static void RenderParts(IEnumerable<Part> parts)
+        {
+            foreach (var part in parts)
+                ColorWriter.Write(part.Foreground, part.Background, part.Text);
+        }
+
         // Constructor
         public Body() { }
 
@@ -116,16 +226,14 @@ namespace ConsoleZapp
 
             WriteRow(new List<Part> { new Part { Text = text } });
         }
-
-        // Writes a formatted line in the given colors into the scrolling area, scrolling the area up if needed
+        // In the given colors
         public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
         {
             var text = ClampToWindowWidth(string.Format(fmt, args));
 
             WriteRow(new List<Part> { new Part { Text = text, Foreground = fg, Background = bg } });
         }
-
-        // Writes a line built from independently colored parts into the scrolling area, scrolling the area up if needed
+        // Built from independently colored parts
         public void WriteLine(IEnumerable<Part> parts)
         {
             WriteRow(new List<Part>(parts));
@@ -310,79 +418,6 @@ namespace ConsoleZapp
             SetLineText(text, ref cursor, History[HistoryIndex]);
         }
 
-        // Replaces the in-progress line's full content, moving the cursor to the end
-        private static void SetLineText(StringBuilder text, ref int cursor, string value)
-        {
-            text.Clear();
-            text.Append(value);
-            cursor = text.Length;
-        }
-
-        // Applies a single decoded key press to the in-progress input line
-        private static void ApplyKey(ConsoleKey virtual_key, char character, StringBuilder text, ref int cursor)
-        {
-            switch (virtual_key)
-            {
-                case ConsoleKey.Backspace:
-                    if (cursor > 0)
-                    {
-                        var length = SurrogatePairWidthBefore(text, cursor);
-                        text.Remove(cursor - length, length);
-                        cursor -= length;
-                    }
-                    break;
-
-                case ConsoleKey.Delete:
-                    if (cursor < text.Length)
-                        text.Remove(cursor, SurrogatePairWidthAfter(text, cursor));
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    if (cursor > 0)
-                        cursor -= SurrogatePairWidthBefore(text, cursor);
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    if (cursor < text.Length)
-                        cursor += SurrogatePairWidthAfter(text, cursor);
-                    break;
-
-                case ConsoleKey.Home:
-                    cursor = 0;
-                    break;
-
-                case ConsoleKey.End:
-                    cursor = text.Length;
-                    break;
-
-                default:
-                    if (!char.IsControl(character))
-                    {
-                        text.Insert(cursor, character);
-                        cursor++;
-                    }
-                    break;
-            }
-        }
-
-        // Returns 2 if the two chars immediately before the cursor form a surrogate pair, 1 otherwise - so Backspace/Left can't split a pair produced by ReadConsoleInputW
-        private static int SurrogatePairWidthBefore(StringBuilder text, int cursor)
-        {
-            if (cursor >= 2 && char.IsSurrogatePair(text[cursor - 2], text[cursor - 1]))
-                return 2;
-
-            return 1;
-        }
-
-        // Returns 2 if the two chars immediately after the cursor form a surrogate pair, 1 otherwise - so Delete/Right can't split a pair produced by ReadConsoleInputW
-        private static int SurrogatePairWidthAfter(StringBuilder text, int cursor)
-        {
-            if (cursor + 1 < text.Length && char.IsSurrogatePair(text[cursor], text[cursor + 1]))
-                return 2;
-
-            return 1;
-        }
-
         // Redraws the prompt + currently typed text on the given row, horizontal-scrolling the visible window so the cursor position always stays on-screen instead of wrapping to another row
         private void RenderInputRow(int row, StringBuilder text, int cursor)
         {
@@ -508,21 +543,6 @@ namespace ConsoleZapp
             return parts;
         }
 
-        // Truncates text that would overflow the window width, avoiding a native wrap/scroll on write
-        private static string ClampToWindowWidth(string text)
-        {
-            const string ELLIPSIS = "...";
-
-            var max_length = Console.WindowWidth - 1;
-
-            if (text.Length <= max_length)
-                return text;
-
-            var content_length = Math.Max(0, max_length - ELLIPSIS.Length);
-
-            return text.Substring(0, content_length) + ELLIPSIS;
-        }
-
         // Marks the prompt row as reserved and, if the live tail is already full, shifts the visible window so the bottom row is free for it - called before ReadLineFromKeys starts reading, mirroring what WriteRow does for a regular line
         private void PreparePromptRow()
         {
@@ -589,28 +609,6 @@ namespace ConsoleZapp
                 ClearRow(row);
                 row++;
             }
-        }
-
-        // Clears a row, then writes the given parts into it from column 0, coloring each part per its own setting
-        private static void RewriteRow(int row, List<Part> parts)
-        {
-            ClearRow(row);
-            RenderParts(parts);
-        }
-
-        // Blanks a row without disturbing the cursor row itself, leaving the cursor at column 0
-        private static void ClearRow(int row)
-        {
-            Console.SetCursorPosition(0, row);
-            Console.Write(new string(' ', Console.WindowWidth - 1));
-            Console.SetCursorPosition(0, row);
-        }
-
-        // Writes parts at the current cursor position, coloring each part per its own setting
-        private static void RenderParts(IEnumerable<Part> parts)
-        {
-            foreach (var part in parts)
-                ColorWriter.Write(part.Foreground, part.Background, part.Text);
         }
     }
 }

@@ -106,8 +106,7 @@ namespace ConsoleZapp
             fmt = "[Exc]: " + fmt;
             Clrprintfln("exception", fmt, args);
         }
-
-        // Exception
+        // From an Exception object
         public void Exception(Exception exc) {
 
             Exception(exc.Message);

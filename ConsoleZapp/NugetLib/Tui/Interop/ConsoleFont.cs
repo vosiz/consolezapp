@@ -9,6 +9,8 @@ namespace ConsoleZapp.Interop
         private const int LF_FACESIZE = 32;
         private const uint TMPF_TRUETYPE = 0x04;
 
+        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+
         [StructLayout(LayoutKind.Sequential)]
         private struct COORD
         {
@@ -19,6 +21,7 @@ namespace ConsoleZapp.Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct CONSOLE_FONT_INFO_EX
         {
+            // Field names mirror the native Win32 struct exactly (Hungarian/camelCase) - deliberate exception to the snake_case/PascalCase rule, for 1:1 traceability against Win32 docs
             public uint cbSize;
             public uint nFont;
             public COORD dwFontSize;
@@ -34,8 +37,6 @@ namespace ConsoleZapp.Interop
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX lpConsoleCurrentFontEx);
-
-        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
         // Reports whether the console is currently using a raster (bitmap) font, which can't decode multi-byte UTF-8 box-drawing glyphs into a single character and garbles them one byte at a time.
         // Returns false (assume fine, no fallback needed) for redirected/non-interactive output or if the font can't be read at all - there's no real console font to inspect there, or no reliable signal to act on.
