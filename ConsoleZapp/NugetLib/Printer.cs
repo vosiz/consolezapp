@@ -45,7 +45,8 @@ namespace ConsoleZapp
             SprintfCore("Sprintfln", fmt + Environment.NewLine, args);
         }
 
-        // Shared Sprintf/Sprintfln/Clrprintf* implementation - reports the actually-called method's own name on failure instead of always "Sprintf"
+        // Shared Sprintf/Sprintfln/Clrprintf* impl
+        // - reports the actual caller's name on failure
         private void SprintfCore(string caller_name, string fmt, object[] args)
         {
             try

@@ -17,7 +17,7 @@ namespace ConsoleZapp
         // Constructor
         protected Control() { }
 
-        // Sets the render width available to the control, clamped to a sane range
+        // Sets the render width, clamped to a sane range
         public virtual void SetWidth(int width)
         {
             Width = Math.Max(MIN_WIDTH, Math.Min(MAX_WIDTH, width));
@@ -26,13 +26,14 @@ namespace ConsoleZapp
         // Renders control content
         public abstract string Render();
 
-        // Returns the colored parts making up this control's content, defaults to the whole rendered content as one part
+        // Returns this control's colored parts
+        // - defaults to the whole render as one part
         public virtual IEnumerable<Part> GetParts()
         {
             yield return new Part { Text = Render(), Foreground = Foreground, Background = Background };
         }
 
-        // Writes the rendered content to the console, using each part's own color
+        // Writes the render to the console, each part in its own color
         public virtual void Print()
         {
             foreach (var part in GetParts())
@@ -64,7 +65,8 @@ namespace ConsoleZapp
             SetColor(pair.Foreground, pair.Background);
         }
 
-        // Sets whether the background color fills the whole row up to the box border, or just the text
+        // Sets whether the background fills the whole row
+        // - or just the text
         public void SetFillRowBackground(bool fill)
         {
             FillRowBackground = fill;

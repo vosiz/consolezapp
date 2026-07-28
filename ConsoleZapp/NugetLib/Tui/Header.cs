@@ -12,7 +12,8 @@ namespace ConsoleZapp
             Containers.Set("main", new Container());
         }
 
-        // Adds a new container, printed after previously added containers - throws if the id is already taken (including "main")
+        // Adds a new container, printed after existing ones
+        // - throws if the id is already taken
         public void AddContainer(string container_id)
         {
             if (Containers.TryGetValue(container_id, out _))
@@ -39,7 +40,7 @@ namespace ConsoleZapp
             Containers[container_id].UpdateControl(name);
         }
 
-        // Overrides the border characters of the given container, defaults to "main"
+        // Overrides border chars for a container, defaults to "main"
         public void SetBorderChars(
             char horizontal,
             char vertical,
@@ -58,14 +59,15 @@ namespace ConsoleZapp
             Containers[container_id].SetBorderColor(fg, bg);
         }
 
-        // Switches every container's border characters to plain ASCII (-, |, +), used as a fallback when the console can't render Unicode box-drawing glyphs (e.g. Windows 7 stuck on a raster font)
+        // Switches every container to plain ASCII borders
+        // - fallback for consoles that can't render Unicode
         public void UseAsciiBorders()
         {
             foreach (var container in Containers.Values)
                 container.SetBorderChars('-', '|', '+', '+', '+', '+');
         }
 
-        // Returns the total row count all containers take up when printed, stacked vertically
+        // Returns the total printed row count, all containers
         public int GetHeight()
         {
             var height = 0;

@@ -43,7 +43,8 @@ namespace ConsoleZapp
             Clrprintfln(clr_set.Foreground, clr_set.Background, fmt, args);
         }
 
-        // Resolves a coloring key to its Config.Coloring, falling back to a default Coloring if the key isn't registered
+        // Resolves a coloring key to its Config.Coloring
+        // - falls back to a default if unregistered
         private Config.Coloring ResolveColoring(string key) {
 
             return Cli.Config.Colorings.TryGetValue(key, out var coloring) ? coloring : new Config.Coloring();

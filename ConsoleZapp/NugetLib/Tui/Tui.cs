@@ -14,10 +14,10 @@ namespace ConsoleZapp
         private int LastWidth = -1;
         private int LastHeight = -1;
 
-        // Shrinks the console's screen buffer down to exactly the visible window, eliminating native scrollback.
-        // Without this, manually scrolling the console (mouse wheel/scrollbar) drags the header along too, since it's just a fixed position in one flat buffer.
-        // Conhost also auto-snaps the view back whenever the app writes to a row currently scrolled out of sight, which looks like the header jumping around mid-write.
-        // Body's own retained-row redraw already reconstructs anything worth keeping, so no real history is lost by dropping the OS-level scrollback.
+        // Shrinks the screen buffer to eliminate native scrollback
+        // - otherwise scrolling drags the fixed header along
+        // - conhost also auto-snaps the view on write, causing jumps
+        // - Body's own redraw already reconstructs anything worth keeping
         private static void RemoveScrollback()
         {
             if (Console.IsOutputRedirected)
@@ -26,7 +26,8 @@ namespace ConsoleZapp
             Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
         }
 
-        // Constructor with header, optional body and an optional fixed-width override; if width is omitted, Print() reads the console's live width instead of assuming a fixed one
+        // Constructor with header, optional body and fixed width
+        // - if width is omitted, Print() reads the live width
         public Tui(Header header, Body body = null, int? width = null)
         {
             Header = header;
@@ -37,7 +38,7 @@ namespace ConsoleZapp
                 Body.ResizeCheck = CheckResize;
         }
 
-        // Prints the header to the console and sets up the body's scrolling area below it
+        // Prints the header, sets up the body's scroll area
         public void Print()
         {
             // console output still goes through Console.Out with the process's OutputEncoding - without forcing UTF-8 here, writing e.g. "€" back out falls back to '?' on most OEM codepages
@@ -61,8 +62,9 @@ namespace ConsoleZapp
             LastHeight = Console.WindowHeight;
         }
 
-        // Re-prints the header and redraws the body from its retained buffer if the console has been resized since the last draw, keeping scrollback history (unlike Print(), which starts fresh).
-        // Called from every drawing method, since there's no resize event to hook on this console host.
+        // Re-prints on resize, redraws Body from its retained buffer
+        // - unlike Print(), keeps scrollback instead of starting fresh
+        // - called from every drawing method, no resize event exists
         private void CheckResize()
         {
             var width = Width ?? Console.WindowWidth;
@@ -88,7 +90,7 @@ namespace ConsoleZapp
             Header.UpdateControl(name, container_id);
         }
 
-        // Overrides the border characters of the given header container, defaults to "main"
+        // Overrides border chars for a header container, defaults to "main"
         public void SetBorderChars(
             char horizontal,
             char vertical,
@@ -133,7 +135,8 @@ namespace ConsoleZapp
             return Body?.ReadCommand();
         }
 
-        // Prints the dialog and reads a matching answer, if a body is set - see Body.ReadDialog
+        // Prints a dialog, reads a matching answer, if set
+        // - see Body.ReadDialog
         public DialogOption? ReadDialog(Dialog dialog)
         {
             CheckResize();
@@ -146,19 +149,21 @@ namespace ConsoleZapp
             Body?.SetPromptColor(fg, bg);
         }
 
-        // Sets the body's scroll mode (Manual/AutoScroll - see ScrollMode), if a body is set
+        // Sets the body's scroll mode, if a body is set
+        // - see ScrollMode for Manual vs. AutoScroll
         public void SetScrollMode(ScrollMode mode)
         {
             Body?.SetScrollMode(mode);
         }
 
-        // Registers an exact keyword that gets highlighted wherever it occurs in typed input, if a body is set
+        // Registers a keyword highlighted wherever typed, if a body is set
         public void AddKeywordColor(string keyword, Cli.Conclr fg, Cli.Conclr bg)
         {
             Body?.AddKeywordColor(keyword, fg, bg);
         }
 
-        // Recolors the whole last input line in place, if a body is set - see Body.RecolorLastInput for caveats
+        // Recolors the last input line, if a body is set
+        // - see Body.RecolorLastInput for caveats
         public void RecolorLastInput(Cli.Conclr fg, Cli.Conclr bg)
         {
             CheckResize();

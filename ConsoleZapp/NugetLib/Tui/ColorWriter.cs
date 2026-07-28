@@ -2,10 +2,10 @@ using System;
 
 namespace ConsoleZapp
 {
-    internal static class ColorWriter
+    public static class ColorWriter
     {
-        // Writes text at the current cursor position, applying whichever of fg/bg is set, resetting afterwards
-        internal static void Write(Cli.Conclr? fg, Cli.Conclr? bg, string text)
+        // Writes text at the cursor, applying whichever of fg/bg is set
+        public static void Write(Cli.Conclr? fg, Cli.Conclr? bg, string text)
         {
             var has_foreground = fg.HasValue;
             var has_background = bg.HasValue;

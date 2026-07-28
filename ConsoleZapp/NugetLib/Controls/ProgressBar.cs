@@ -50,7 +50,7 @@ namespace ConsoleZapp
             return $"{margin}{Label} [{bar}] {layout.percent_text}{margin}";
         }
 
-        // Renders and writes the bar directly to the console, applying per-segment colors
+        // Renders and writes the bar, each segment in its own color
         public override void Print()
         {
             // matches Tui.Print()'s UTF-8 setup - ProgressBar can be printed standalone, outside a Tui, where nothing else would set this for FullChar's default box-drawing glyph
@@ -87,25 +87,26 @@ namespace ConsoleZapp
             SetProgress((float)((value - min) / (max - min)));
         }
 
-        // Sets the margin on both sides of the bar, clamped to non-negative
+        // Sets the bar's margin, clamped to non-negative
         public void SetMargin(int margin)
         {
             Margin = Math.Max(0, margin);
         }
 
-        // Sets the number of decimal places shown in the percent text, clamped to non-negative
+        // Sets the percent text's decimal places
+        // - clamped to non-negative
         public void SetDecimals(int decimals)
         {
             Decimals = Math.Max(0, decimals);
         }
 
-        // Sets the character used for the empty portion of the bar
+        // Sets the empty-portion character
         public void SetEmptyChar(char empty_char)
         {
             EmptyChar = empty_char;
         }
 
-        // Sets the character used for the filled portion of the bar
+        // Sets the filled-portion character
         public void SetFullChar(char full_char)
         {
             FullChar = full_char;
@@ -129,19 +130,19 @@ namespace ConsoleZapp
             PercentColor = color;
         }
 
-        // Sets the color of the empty portion of the bar
+        // Sets the empty-portion color
         public void SetEmptyColor(BarColor color)
         {
             EmptyColor = color;
         }
 
-        // Sets the color of the filled portion of the bar
+        // Sets the filled-portion color
         public void SetFullColor(BarColor color)
         {
             FullColor = color;
         }
 
-        // Computes the percent text and bar-fill split shared by Render() and Print()
+        // Computes layout shared by Render()/Print()
         private (string percent_text, int fill_length, int empty_length) ComputeLayout()
         {
             var percent = Progress * 100f;
