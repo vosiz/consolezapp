@@ -21,7 +21,6 @@ namespace ConsoleZapp.Interop
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct CONSOLE_FONT_INFO_EX
         {
-            // Field names mirror the native Win32 struct exactly (Hungarian/camelCase) - deliberate exception to the snake_case/PascalCase rule, for 1:1 traceability against Win32 docs
             public uint cbSize;
             public uint nFont;
             public COORD dwFontSize;

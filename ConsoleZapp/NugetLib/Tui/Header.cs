@@ -16,7 +16,7 @@ namespace ConsoleZapp
         // - throws if the id is already taken
         public void AddContainer(string container_id)
         {
-            if (Containers.TryGetValue(container_id, out _))
+            if (Containers.TryGetValue(container_id, out var existing))
                 throw new ArgumentException($"Container ({container_id}) already exists");
 
             Containers.Set(container_id, new Container());
@@ -41,14 +41,7 @@ namespace ConsoleZapp
         }
 
         // Overrides border chars for a container, defaults to "main"
-        public void SetBorderChars(
-            char horizontal,
-            char vertical,
-            char top_left,
-            char top_right,
-            char bottom_left,
-            char bottom_right,
-            string container_id = "main")
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
         {
             Containers[container_id].SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right);
         }

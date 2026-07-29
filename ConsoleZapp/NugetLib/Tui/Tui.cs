@@ -62,27 +62,6 @@ namespace ConsoleZapp
             LastHeight = Console.WindowHeight;
         }
 
-        // Re-prints on resize, redraws Body from its retained buffer
-        // - unlike Print(), keeps scrollback instead of starting fresh
-        // - called from every drawing method, no resize event exists
-        private void CheckResize()
-        {
-            var width = Width ?? Console.WindowWidth;
-            var height = Console.WindowHeight;
-
-            if (width == LastWidth && height == LastHeight)
-                return;
-
-            LastWidth = width;
-            LastHeight = height;
-
-            RemoveScrollback();
-
-            Console.Clear();
-            Header.Print(width);
-            Body?.Redraw(Header.GetHeight());
-        }
-
         // Re-renders a single header control in place, defaults to "main" container
         public void UpdateControl(string name, string container_id = "main")
         {
@@ -91,14 +70,7 @@ namespace ConsoleZapp
         }
 
         // Overrides border chars for a header container, defaults to "main"
-        public void SetBorderChars(
-            char horizontal,
-            char vertical,
-            char top_left,
-            char top_right,
-            char bottom_left,
-            char bottom_right,
-            string container_id = "main")
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
         {
             Header.SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right, container_id);
         }
@@ -168,6 +140,27 @@ namespace ConsoleZapp
         {
             CheckResize();
             Body?.RecolorLastInput(fg, bg);
+        }
+
+        // Re-prints on resize, redraws Body from its retained buffer
+        // - unlike Print(), keeps scrollback instead of starting fresh
+        // - called from every drawing method, no resize event exists
+        private void CheckResize()
+        {
+            var width = Width ?? Console.WindowWidth;
+            var height = Console.WindowHeight;
+
+            if (width == LastWidth && height == LastHeight)
+                return;
+
+            LastWidth = width;
+            LastHeight = height;
+
+            RemoveScrollback();
+
+            Console.Clear();
+            Header.Print(width);
+            Body?.Redraw(Header.GetHeight());
         }
     }
 }

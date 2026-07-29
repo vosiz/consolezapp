@@ -97,9 +97,7 @@ namespace CzappTester.Tests.Basic
             Cli.Print.WriteLine("Raw text printed via EscapeFormat (should NOT throw):");
             Cli.Print.WriteLine(raw.EscapeFormat());
 
-            // EscapeJson only escapes quotes/backslashes/control chars for JSON embedding -
-            // it does NOT escape braces, so its output must still go through the "{0}" arg
-            // pattern (or EscapeFormat) when printed, same as any other unescaped text.
+            // EscapeJson only escapes quotes/backslashes/control chars for JSON embedding - it does NOT escape braces, so its output must still go through the "{0}" arg pattern (or EscapeFormat) when printed, same as any other unescaped text.
             Cli.Print.WriteLine("Same text escaped for JSON:");
             Cli.Print.WriteLine("{0}", raw.EscapeJson());
         }

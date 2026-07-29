@@ -36,13 +36,7 @@ namespace ConsoleZapp
         }
 
         // Overrides the Unicode box-drawing border chars
-        public void SetBorderChars(
-            char horizontal,
-            char vertical,
-            char top_left,
-            char top_right,
-            char bottom_left,
-            char bottom_right)
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right)
         {
             BorderHorizontal = horizontal;
             BorderVertical = vertical;

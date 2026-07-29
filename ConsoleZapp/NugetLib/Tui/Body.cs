@@ -7,7 +7,8 @@ namespace ConsoleZapp
 {
     public class Body
     {
-        // Set by Tui to its own (private) CheckResize, invoked from inside ReadLineFromKeys's native read loop the instant a WINDOW_BUFFER_SIZE_EVENT arrives
+        // Set by Tui to its own CheckResize
+        // - invoked from ReadLineFromKeys's native loop, on resize
         public Action ResizeCheck;
 
         private string Prompt = "> ";
@@ -16,13 +17,17 @@ namespace ConsoleZapp
 
         private readonly List<Part> KeywordColors = new List<Part>();
 
-        // Every previously submitted non-empty command, oldest first - recalled via ConsoleKey.UpArrow/DownArrow in ReadLineFromKeys. Never trimmed, same "keep everything" approach as Rows.
+        // Submitted commands, oldest first
+        // - recalled via Up/DownArrow in ReadLineFromKeys
+        // - never trimmed, same as Rows
         private readonly List<string> History = new List<string>();
 
-        // Index into History currently shown while recalling; -1 means "not recalling" (the live in-progress line is shown instead)
+        // Index into History currently shown while recalling
+        // - -1 means not recalling, the live line is shown instead
         private int HistoryIndex = -1;
 
-        // The in-progress line as it stood right before recall started, restored if the user arrows back down past the newest history entry
+        // In-progress line as it stood before recall started
+        // - restored once the user arrows past the newest entry
         private string HistoryPendingLine;
 
         private string LastInputLine;
@@ -31,16 +36,22 @@ namespace ConsoleZapp
         private int TopRow;
         private int CurrentRow;
 
-        // Retained scrollback: one entry per line ever written, oldest first, never trimmed - the whole session's history stays in memory (see .goals.md, "Real, reviewable scrollback for Body").
-        // Redraws are sourced from here instead of reading back the live console screen content (Console.MoveBufferArea), which is what corrupts non-ASCII glyphs on scroll.
+        /* Retained scrollback, one entry per line, oldest first, never
+           trimmed - the whole session stays in memory (see .goals.md).
+           Redraws source from here rather than the live screen, which
+           is what corrupts non-ASCII glyphs on scroll (MoveBufferArea) */
         private readonly List<List<Part>> Rows = new List<List<Part>>();
 
         private ScrollMode Mode = ScrollMode.Manual;
 
-        // Absolute index into Rows of the topmost row currently shown, while reviewing history; -1 means "following the live tail" (the normal state). Deliberately an absolute index, not "N rows back from the tail" - so a mid-review position doesn't drift when new content is appended (see .goals.md).
+        /* Absolute index into Rows of the topmost row shown while
+           reviewing; -1 means following the live tail (the normal
+           state). Absolute, not relative, so a mid-review position
+           doesn't drift when new content is appended (see .goals.md) */
         private int ScrollOffset = -1;
 
-        // True for the duration of ReadLineFromKeys - lets RedrawRows/ContentCapacity know to leave the bottom row free for the live-typed prompt instead of filling it with history
+        // True while ReadLineFromKeys is reading a line
+        // - tells RedrawRows/ContentCapacity to reserve the bottom row
         private bool PromptActive;
 
         // Replaces the line's content, cursor to end

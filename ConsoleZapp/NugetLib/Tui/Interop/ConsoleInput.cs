@@ -34,13 +34,15 @@ namespace ConsoleZapp.Interop
         [StructLayout(LayoutKind.Sequential)]
         private struct KEY_EVENT_RECORD
         {
-            // Field names mirror the native Win32 struct exactly (Hungarian/camelCase) - deliberate exception to the snake_case/PascalCase rule, for 1:1 traceability against Win32 docs
             public int bKeyDown;
             public ushort wRepeatCount;
             public ushort wVirtualKeyCode;
             public ushort wVirtualScanCode;
 
-            // Deliberately ushort, not char: a char field here would marshal under the struct's (default Ansi) CharSet as a single narrowed byte instead of the native 2-byte WCHAR, corrupting this field and misaligning dwControlKeyState right after it.
+            /* Deliberately ushort, not char: a char field here would marshal
+               under the struct's default Ansi CharSet as a single narrowed
+               byte instead of the native 2-byte WCHAR, corrupting this field
+               and misaligning dwControlKeyState right after it */
             public ushort UnicodeChar;
 
             public uint dwControlKeyState;
@@ -55,7 +57,6 @@ namespace ConsoleZapp.Interop
         [StructLayout(LayoutKind.Sequential)]
         private struct MOUSE_EVENT_RECORD
         {
-            // Field names mirror the native Win32 struct exactly (Hungarian/camelCase) - deliberate exception to the snake_case/PascalCase rule, for 1:1 traceability against Win32 docs
             public COORD dwMousePosition;
             public uint dwButtonState;
             public uint dwControlKeyState;

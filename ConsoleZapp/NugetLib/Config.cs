@@ -7,8 +7,8 @@ namespace ConsoleZapp
 {
     public class Config
     {
-        public class Coloring {
-
+        public class Coloring
+        {
             public Cli.Conclr Foreground = Cli.Conclr.DefaultForeground;
             public Cli.Conclr Background = Cli.Conclr.DefaultBackground;
 
@@ -23,24 +23,21 @@ namespace ConsoleZapp
 
         }
 
-        public enum LineType { 
-        
+        public enum LineType
+        {
             General,    // corner-line-corner
             Custom,     // fully customized
         }
 
-        public class Line {
-
+        public class Line
+        {
             public const int MAX_WIDTH = 80;
 
             public LineType Type { get; private set; } = LineType.General;
             public Coloring Coloring { get; private set; } = new Coloring();
 
             public string Format { get; private set; } = "{0}";
-            public string[] Args { get; set; }
-                = new string[1] {
-                    ""
-            };
+            public string[] Args { get; set; } = new string[1] { "" };
 
             public char LineChar { get; private set; } = '=';
             public char LineCorner { get; private set; } = '+';
@@ -72,7 +69,7 @@ namespace ConsoleZapp
             // Formats the line according to its type
             public override string ToString() {
 
-                string tostr = string.Empty;
+                var tostr = string.Empty;
 
                 try
                 {
@@ -110,26 +107,22 @@ namespace ConsoleZapp
             }
         }
 
-
-        public Dictionary<string, Coloring> Colorings { get; } 
-            = new Dictionary<string, Coloring>() {
-
-                { "debug", new Coloring(Cli.Conclr.Grayd, Cli.Conclr.DefBg) },
-                { "info", new Coloring(Cli.Conclr.DefFg, Cli.Conclr.DefBg) },
-                { "warning", new Coloring(Cli.Conclr.Yellow, Cli.Conclr.DefBg) },
-                { "error", new Coloring(Cli.Conclr.Red, Cli.Conclr.DefBg) },
-                { "exception", new Coloring(Cli.Conclr.White, Cli.Conclr.Red) },
-                { "success", new Coloring(Cli.Conclr.Green, Cli.Conclr.DefBg) },
-                { "fail", new Coloring(Cli.Conclr.Redd, Cli.Conclr.DefBg) },
+        public Dictionary<string, Coloring> Colorings { get; } = new Dictionary<string, Coloring>()
+        {
+            { "debug", new Coloring(Cli.Conclr.Grayd, Cli.Conclr.DefBg) },
+            { "info", new Coloring(Cli.Conclr.DefFg, Cli.Conclr.DefBg) },
+            { "warning", new Coloring(Cli.Conclr.Yellow, Cli.Conclr.DefBg) },
+            { "error", new Coloring(Cli.Conclr.Red, Cli.Conclr.DefBg) },
+            { "exception", new Coloring(Cli.Conclr.White, Cli.Conclr.Red) },
+            { "success", new Coloring(Cli.Conclr.Green, Cli.Conclr.DefBg) },
+            { "fail", new Coloring(Cli.Conclr.Redd, Cli.Conclr.DefBg) },
         };
 
-        public Dictionary<string, Line> Lining { get; }
-            = new Dictionary<string, Line>() {
-
-                { "1", Line.Create('=', '+', 50)},
-                { "2", Line.Create('-', '+', 24)},
+        public Dictionary<string, Line> Lining { get; } = new Dictionary<string, Line>()
+        {
+            { "1", Line.Create('=', '+', 50) },
+            { "2", Line.Create('-', '+', 24) },
         };
-
 
         // Constructor
         public Config() { }

@@ -13,7 +13,8 @@ namespace CzappTester.Tests.Basic
             Check.Equal(Cli.Conclr.Cyand, pair.Background);
         }
 
-        // ColorPresets has exactly 295 fields: 240 cross + 16 diagonal + 32 system-pinned + 7 severity
+        // ColorPresets has exactly 295 fields
+        // - 240 cross + 16 diagonal + 32 system-pinned + 7 severity
         public static void PresetCountIsComplete()
         {
             var fields = typeof(ColorPresets).GetFields(
@@ -37,7 +38,8 @@ namespace CzappTester.Tests.Basic
             Check.Equal(Cli.Conclr.Redd, ColorPresets.SystemOnRedd.Background);
         }
 
-        // Severity presets mirror Cli.Print's existing severity colors (Config.Colorings)
+        // Severity presets mirror Cli.Print's severity colors
+        // - Config.Colorings
         public static void SeverityMirrorsConfigColorings()
         {
             var config_error = Cli.Config.Colorings["error"];
@@ -85,7 +87,8 @@ namespace CzappTester.Tests.Basic
             Check.Equal(Cli.Conclr.Red, part.Background);
         }
 
-        // Body.SetPromptColor(ColorPair) - no public getter to assert against, smoke-tested only
+        // Body.SetPromptColor(ColorPair)
+        // - no public getter to assert, smoke-tested only
         public static void BodySetPromptColorAcceptsPair()
         {
             var body = new Body();

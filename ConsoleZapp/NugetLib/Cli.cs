@@ -6,7 +6,8 @@ namespace ConsoleZapp
 {
     public static class Cli
     {
-        public enum Conclr {
+        public enum Conclr
+        {
 
             // defaults
             DefaultForeground   = ConsoleColor.White,

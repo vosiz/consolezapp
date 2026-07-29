@@ -8,15 +8,16 @@ namespace CzappTester.Tests
     public static class TestRunner
     {
 
-        // Runs every public static parameterless void method found on any *Tests class in the given assembly
+        // Runs every test method found in the assembly
+        // - public static parameterless void, on any *Tests class
         public static void RunAll(Assembly assembly) {
 
             var test_classes = assembly.GetTypes()
                 .Where(t => t.IsClass && t.IsAbstract && t.IsSealed && t.Name.EndsWith("Tests"))
                 .OrderBy(t => t.FullName);
 
-            int passed = 0;
-            int failed = 0;
+            var passed = 0;
+            var failed = 0;
 
             foreach (var test_class in test_classes) {
 
@@ -26,7 +27,7 @@ namespace CzappTester.Tests
 
                 foreach (var method in methods) {
 
-                    string name = string.Format("{0}.{1}", test_class.FullName, method.Name);
+                    var name = string.Format("{0}.{1}", test_class.FullName, method.Name);
 
                     try {
 
