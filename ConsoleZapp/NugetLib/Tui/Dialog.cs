@@ -40,14 +40,14 @@ namespace ConsoleZapp
             return options;
         }
 
-        // Constructor with explicit options, each carrying its own accepted answer(s)
+        // Constructor with explicit, self-answered options
         public Dialog(string question, DialogLayout layout, params DialogOption[] options)
         {
             Question = question;
             Layout = layout;
             Options = new List<DialogOption>(options);
         }
-        // Constructor from plain labels, auto-numbering each one's accepted answer "1".."9"
+        // Constructor from plain labels, auto-numbered "1".."9"
         public Dialog(string question, DialogLayout layout, params string[] labels)
         {
             Question = question;
@@ -56,7 +56,7 @@ namespace ConsoleZapp
         }
 
         // Builds the lines to print for this dialog, per its layout
-        internal IEnumerable<string> BuildLines()
+        public IEnumerable<string> BuildLines()
         {
             if (Layout == DialogLayout.Stacked)
                 return BuildStackedLines();
@@ -64,8 +64,9 @@ namespace ConsoleZapp
             return new[] { BuildInlineLine() };
         }
 
-        // Matches a typed line against this dialog's options, case-insensitively - returns null if nothing matches
-        internal DialogOption? Match(string input)
+        // Matches typed input against options, case-insensitively
+        // - returns null if nothing matches
+        public DialogOption? Match(string input)
         {
             var normalized = (input ?? string.Empty).Trim().ToLowerInvariant();
 
@@ -88,7 +89,7 @@ namespace ConsoleZapp
             return string.Format("{0} {1}", Question, string.Join(", ", parts));
         }
 
-        // Builds the question line followed by one "answer) Label" line per option
+        // Builds the question + one "answer) Label" line per option
         private List<string> BuildStackedLines()
         {
             var lines = new List<string> { Question };

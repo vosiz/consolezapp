@@ -4,10 +4,10 @@ using ConsoleZapp;
 
 namespace CzappTester
 {
-    class Program
+    public class Program
     {
-        // MAIN
-        static void Main(string[] args)
+        // Entry point
+        private static void Main(string[] args)
         {
 
             Cli.Init();

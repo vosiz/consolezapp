@@ -95,12 +95,12 @@ namespace CzappTester.Tests.Controls
 
         public static void ClampsWidthToSaneRange()
         {
-            // Below Control.MinWidth (40) should clamp up
+            // Below Control.MIN_WIDTH (40) should clamp up
             var narrow = new ProgressBar("Narrow", 10);
             narrow.SetProgress(0.5f);
             Cli.Print.WriteLine("[{0}] length {1}", narrow.Render(), narrow.Render().Length);
 
-            // Above Control.MaxWidth (120) should clamp down
+            // Above Control.MAX_WIDTH (120) should clamp down
             var wide = new ProgressBar("Wide", 500);
             wide.SetProgress(0.5f);
             Cli.Print.WriteLine("[{0}] length {1}", wide.Render(), wide.Render().Length);
@@ -114,7 +114,7 @@ namespace CzappTester.Tests.Controls
 
         public static void DoesNotCrashWhenLabelExceedsWidth()
         {
-            var bar = new ProgressBar("A very long label that eats up all the space", Control.MinWidth);
+            var bar = new ProgressBar("A very long label that eats up all the space", Control.MIN_WIDTH);
             bar.SetProgress(0.5f);
 
             Cli.Print.WriteLine("[{0}] length {1}", bar.Render(), bar.Render().Length);
@@ -158,6 +158,24 @@ namespace CzappTester.Tests.Controls
         {
             foreach (BarColor color in Enum.GetValues(typeof(BarColor)))
                 Cli.Print.WriteLine("{0} -> {1}", color, color.ToConsoleColor());
+        }
+
+        public static void NegativeMarginDoesNotThrow()
+        {
+            var bar = new ProgressBar("Margin");
+            bar.SetProgress(0.5f);
+            bar.SetMargin(-5);
+
+            Cli.Print.WriteLine(bar.Render());
+        }
+
+        public static void NegativeDecimalsDoesNotThrow()
+        {
+            var bar = new ProgressBar("Decimals");
+            bar.SetProgress(0.5f);
+            bar.SetDecimals(-3);
+
+            Cli.Print.WriteLine(bar.Render());
         }
     }
 }

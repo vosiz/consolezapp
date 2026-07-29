@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace ConsoleZapp.Interop
 {
-    internal static class ConsoleInput
+    public static class ConsoleInput
     {
         private const int STD_INPUT_HANDLE = -10;
         private const uint ENABLE_WINDOW_INPUT = 0x0008;
@@ -19,6 +19,11 @@ namespace ConsoleZapp.Interop
         private const int MAX_CONSECUTIVE_READ_FAILURES = 20;
         private const int READ_FAILURE_BACKOFF_MS = 50;
 
+        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+
+        private static IntPtr InputHandle;
+        private static bool WindowInputEnabled;
+
         [StructLayout(LayoutKind.Sequential)]
         private struct COORD
         {
@@ -29,13 +34,15 @@ namespace ConsoleZapp.Interop
         [StructLayout(LayoutKind.Sequential)]
         private struct KEY_EVENT_RECORD
         {
-            // Field names mirror the native Win32 struct exactly (Hungarian/camelCase) - deliberate exception to the snake_case/PascalCase rule, for 1:1 traceability against Win32 docs
             public int bKeyDown;
             public ushort wRepeatCount;
             public ushort wVirtualKeyCode;
             public ushort wVirtualScanCode;
 
-            // Deliberately ushort, not char: a char field here would marshal under the struct's (default Ansi) CharSet as a single narrowed byte instead of the native 2-byte WCHAR, corrupting this field and misaligning dwControlKeyState right after it.
+            /* Deliberately ushort, not char: a char field here would marshal
+               under the struct's default Ansi CharSet as a single narrowed
+               byte instead of the native 2-byte WCHAR, corrupting this field
+               and misaligning dwControlKeyState right after it */
             public ushort UnicodeChar;
 
             public uint dwControlKeyState;
@@ -50,7 +57,6 @@ namespace ConsoleZapp.Interop
         [StructLayout(LayoutKind.Sequential)]
         private struct MOUSE_EVENT_RECORD
         {
-            // Field names mirror the native Win32 struct exactly (Hungarian/camelCase) - deliberate exception to the snake_case/PascalCase rule, for 1:1 traceability against Win32 docs
             public COORD dwMousePosition;
             public uint dwButtonState;
             public uint dwControlKeyState;
@@ -89,14 +95,9 @@ namespace ConsoleZapp.Interop
             uint nLength,
             out uint lpNumberOfEventsRead);
 
-        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
-
-        private static IntPtr InputHandle;
-        private static bool WindowInputEnabled;
-
-        internal readonly struct NativeKeyEvent
+        public readonly struct NativeKeyEvent
         {
-            // A single native key-down event, translated to the pieces ReadLineFromKeys needs
+            // A key-down event, translated to what ReadLineFromKeys needs
             public NativeKeyEvent(ushort virtual_key_code, char character, ushort repeat_count)
             {
                 VirtualKeyCode = virtual_key_code;
@@ -109,33 +110,14 @@ namespace ConsoleZapp.Interop
             public ushort RepeatCount { get; }
         }
 
-        // Enables ENABLE_WINDOW_INPUT and ENABLE_MOUSE_INPUT on the console input mode (once), preserving every other existing flag (notably ENABLE_PROCESSED_INPUT, so Ctrl+C keeps working) - this is what makes ReadConsoleInput also emit WINDOW_BUFFER_SIZE_EVENT records on resize and MOUSE_EVENT records for the wheel.
-        // ENABLE_QUICK_EDIT_MODE is cleared and ENABLE_EXTENDED_FLAGS set alongside it - the two mouse-input modes are mutually exclusive on Windows (QuickEdit swallows mouse events before the app ever sees them). Trade-off: native click-drag text selection in the console window stops working once this is enabled.
-        // Windows-only by design - see .ideas.md for a possible future cross-platform native rewrite.
-        private static void EnsureWindowInputEnabled()
-        {
-            if (WindowInputEnabled)
-                return;
-
-            InputHandle = GetStdHandle(STD_INPUT_HANDLE);
-
-            if (InputHandle == IntPtr.Zero || InputHandle == INVALID_HANDLE_VALUE)
-                return;
-
-            if (GetConsoleMode(InputHandle, out var mode))
-            {
-                var new_mode = (mode | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS) & ~ENABLE_QUICK_EDIT_MODE;
-
-                if (SetConsoleMode(InputHandle, new_mode))
-                    WindowInputEnabled = true;
-            }
-        }
-
-        // Reads raw Win32 console input, bypassing Console.ReadKey's lossy codepage translation (needed for correct multibyte/non-ASCII typed input, e.g. "€") and picking up resize events immediately instead of only on the next Console.ReadKey-based call.
-        // Blocks (natively, no polling) until either a key-down event, a resize event, or a mouse-wheel event arrives.
-        // Returns the key event, or null if a resize was handled (caller should re-render and call this again).
-        // Mouse wheel events are synthesized into PageUp/PageDown NativeKeyEvents so callers need no mouse-specific handling. Key-up, non-wheel mouse, menu and focus events are silently skipped.
-        internal static NativeKeyEvent? ReadKeyOrResize(Action on_resize)
+        // Reads raw Win32 console input
+        // - bypasses ReadKey's lossy codepage translation
+        // - picks up resize events immediately
+        // - blocks natively until a key/resize/wheel event
+        // - null return means a resize was handled
+        // - wheel events synthesize as PageUp/PageDown
+        // - other mouse/menu/focus events are skipped
+        public static NativeKeyEvent? ReadKeyOrResize(Action on_resize)
         {
             EnsureWindowInputEnabled();
 
@@ -190,6 +172,31 @@ namespace ConsoleZapp.Interop
 
                     return new NativeKeyEvent((ushort)virtual_key, '\0', repeat_count);
                 }
+            }
+        }
+
+        // Enables window/mouse input on the console mode (once)
+        // - preserves other flags, e.g. Ctrl+C keeps working
+        // - lets ReadConsoleInput also emit resize/wheel records
+        // - clears QuickEdit (mutually exclusive with mouse input)
+        // - trade-off: native click-drag text selection stops working
+        // - Windows-only by design, see .ideas.md for a future rewrite
+        private static void EnsureWindowInputEnabled()
+        {
+            if (WindowInputEnabled)
+                return;
+
+            InputHandle = GetStdHandle(STD_INPUT_HANDLE);
+
+            if (InputHandle == IntPtr.Zero || InputHandle == INVALID_HANDLE_VALUE)
+                return;
+
+            if (GetConsoleMode(InputHandle, out var mode))
+            {
+                var new_mode = (mode | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS) & ~ENABLE_QUICK_EDIT_MODE;
+
+                if (SetConsoleMode(InputHandle, new_mode))
+                    WindowInputEnabled = true;
             }
         }
     }

@@ -5,8 +5,8 @@ namespace ConsoleZapp
 {
     public abstract class Control
     {
-        public const int MinWidth = 40;
-        public const int MaxWidth = 120;
+        public const int MIN_WIDTH = 40;
+        public const int MAX_WIDTH = 120;
 
         public Cli.Conclr? Foreground { get; private set; }
         public Cli.Conclr? Background { get; private set; }
@@ -14,10 +14,43 @@ namespace ConsoleZapp
 
         protected int Width = 80;
 
-        // Sets the render width available to the control, clamped to a sane range
+        // Constructor
+        protected Control() { }
+
+        // Sets the render width, clamped to a sane range
         public virtual void SetWidth(int width)
         {
-            Width = Math.Max(MinWidth, Math.Min(MaxWidth, width));
+            Width = Math.Max(MIN_WIDTH, Math.Min(MAX_WIDTH, width));
+        }
+
+        // Renders control content
+        public abstract string Render();
+
+        // Returns this control's colored parts
+        // - defaults to the whole render as one part
+        public virtual IEnumerable<Part> GetParts()
+        {
+            yield return new Part { Text = Render(), Foreground = Foreground, Background = Background };
+        }
+
+        // Writes the render to the console, each part in its own color
+        public virtual void Print()
+        {
+            foreach (var part in GetParts())
+            {
+                var has_foreground = part.Foreground.HasValue;
+                var has_background = part.Background.HasValue;
+
+                if (has_foreground)
+                    Console.ForegroundColor = (ConsoleColor)part.Foreground.Value;
+                if (has_background)
+                    Console.BackgroundColor = (ConsoleColor)part.Background.Value;
+
+                Console.Write(part.Text);
+
+                if (has_foreground || has_background)
+                    Console.ResetColor();
+            }
         }
 
         // Sets the control's foreground/background color
@@ -32,39 +65,11 @@ namespace ConsoleZapp
             SetColor(pair.Foreground, pair.Background);
         }
 
-        // Sets whether the background color fills the whole row up to the box border, or just the text
+        // Sets whether the background fills the whole row
+        // - or just the text
         public void SetFillRowBackground(bool fill)
         {
             FillRowBackground = fill;
-        }
-
-        // Renders control content
-        public abstract string Render();
-
-        // Returns the colored parts making up this control's content, defaults to the whole rendered content as one part
-        public virtual IEnumerable<Part> GetParts()
-        {
-            yield return new Part { Text = Render(), Foreground = Foreground, Background = Background };
-        }
-
-        // Writes the rendered content to the console, using each part's own color
-        public virtual void Print()
-        {
-            foreach (var part in GetParts())
-            {
-                var has_color = part.Foreground.HasValue;
-
-                if (has_color)
-                {
-                    Console.ForegroundColor = (ConsoleColor)part.Foreground.Value;
-                    Console.BackgroundColor = (ConsoleColor)part.Background.Value;
-                }
-
-                Console.Write(part.Text);
-
-                if (has_color)
-                    Console.ResetColor();
-            }
         }
     }
 }

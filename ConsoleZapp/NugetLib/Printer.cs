@@ -36,27 +36,19 @@ namespace ConsoleZapp
         // Format string
         public void Sprintf(string fmt, params object[] args)
         {
-            try
-            {
-                Console.Write(string.Format(fmt, args));
-            }
-            catch (Exception exc)
-            {
-                throw new PrintException($"Sprintf failed, fmt: {fmt}", exc);
-            }
+            SprintfCore("Sprintf", fmt, args);
         }
 
         // Format string nl
         public void Sprintfln(string fmt, params object[] args)
         {
-            fmt += Environment.NewLine;
-            Sprintf(fmt, args);
+            SprintfCore("Sprintfln", fmt + Environment.NewLine, args);
         }
 
         // Prints blank line(s)
         public void NewLine(int count = 1)
         {
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
                 Console.WriteLine();
         }
 
@@ -101,8 +93,7 @@ namespace ConsoleZapp
             fmt = "[Exc]: " + fmt;
             Clrprintfln("exception", fmt, args);
         }
-
-        // Exception
+        // From an Exception object
         public void Exception(Exception exc) {
 
             Exception(exc.Message);
@@ -139,5 +130,18 @@ namespace ConsoleZapp
             WriteLine("]");
         }
 
+        // Shared Sprintf/Sprintfln/Clrprintf* impl
+        // - reports the actual caller's name on failure
+        private void SprintfCore(string caller_name, string fmt, object[] args)
+        {
+            try
+            {
+                Console.Write(string.Format(fmt, args));
+            }
+            catch (Exception exc)
+            {
+                throw new PrintException($"{caller_name} failed, fmt: {fmt}", exc);
+            }
+        }
     }
 }

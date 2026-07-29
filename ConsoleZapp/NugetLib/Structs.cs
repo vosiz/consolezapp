@@ -19,8 +19,7 @@ namespace ConsoleZapp
 
             Line(level.ToString());
         }
-
-        // Print line by key
+        // By key
         public void Line(string key) {
 
             try
@@ -34,7 +33,7 @@ namespace ConsoleZapp
             }
             catch (Exception exc) {
 
-                throw new Exception("Line print exception", exc);
+                throw new PrintException("Line print exception", exc);
             }
         }
 
@@ -43,8 +42,7 @@ namespace ConsoleZapp
 
             Headline(level.ToString(), headline);
         }
-
-        // Prints headline by key
+        // By key
         public void Headline(string key, params string[] str_pars) {
 
             try
@@ -59,7 +57,7 @@ namespace ConsoleZapp
             }
             catch (Exception exc) {
 
-                throw new Exception("Line print exception", exc);
+                throw new PrintException("Headline print exception", exc);
             }
         }
 

@@ -6,7 +6,8 @@ namespace ConsoleZapp
 {
     public static class Cli
     {
-        public enum Conclr {
+        public enum Conclr
+        {
 
             // defaults
             DefaultForeground   = ConsoleColor.White,
@@ -42,6 +43,7 @@ namespace ConsoleZapp
         public static Printer Print { get; private set; }
         public static Config Config { get; private set; }
 
+        // Initializes Cli with a config, or a default if none given
         public static void Init(Config config = null)
         {
             Config = config;

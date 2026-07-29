@@ -1,3 +1,5 @@
+using System;
+
 namespace ConsoleZapp
 {
     public class Header
@@ -8,6 +10,16 @@ namespace ConsoleZapp
         public Header()
         {
             Containers.Set("main", new Container());
+        }
+
+        // Adds a new container, printed after existing ones
+        // - throws if the id is already taken
+        public void AddContainer(string container_id)
+        {
+            if (Containers.TryGetValue(container_id, out var existing))
+                throw new ArgumentException($"Container ({container_id}) already exists");
+
+            Containers.Set(container_id, new Container());
         }
 
         // Adds a control to the given container, defaults to "main"
@@ -28,15 +40,8 @@ namespace ConsoleZapp
             Containers[container_id].UpdateControl(name);
         }
 
-        // Overrides the border characters of the given container, defaults to "main"
-        public void SetBorderChars(
-            char horizontal,
-            char vertical,
-            char top_left,
-            char top_right,
-            char bottom_left,
-            char bottom_right,
-            string container_id = "main")
+        // Overrides border chars for a container, defaults to "main"
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right, string container_id = "main")
         {
             Containers[container_id].SetBorderChars(horizontal, vertical, top_left, top_right, bottom_left, bottom_right);
         }
@@ -47,14 +52,15 @@ namespace ConsoleZapp
             Containers[container_id].SetBorderColor(fg, bg);
         }
 
-        // Switches every container's border characters to plain ASCII (-, |, +), used as a fallback when the console can't render Unicode box-drawing glyphs (e.g. Windows 7 stuck on a raster font)
+        // Switches every container to plain ASCII borders
+        // - fallback for consoles that can't render Unicode
         public void UseAsciiBorders()
         {
             foreach (var container in Containers.Values)
                 container.SetBorderChars('-', '|', '+', '+', '+', '+');
         }
 
-        // Returns the total row count all containers take up when printed, stacked vertically
+        // Returns the total printed row count, all containers
         public int GetHeight()
         {
             var height = 0;

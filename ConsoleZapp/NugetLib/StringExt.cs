@@ -2,10 +2,10 @@ using System.Text;
 
 namespace ConsoleZapp
 {
-    static public class StringExt
+    public static class StringExt
     {
-        // Escapes curly braces so text is safe to pass as a string.Format template with no args
-        static public string EscapeFormat(this string text)
+        // Escapes braces for safe use as a string.Format template
+        public static string EscapeFormat(this string text)
         {
             if (text == null)
                 return text;
@@ -13,8 +13,8 @@ namespace ConsoleZapp
             return text.Replace("{", "{{").Replace("}", "}}");
         }
 
-        // Escapes text for safe embedding inside a JSON string literal
-        static public string EscapeJson(this string text)
+        // Escapes text for a JSON string literal
+        public static string EscapeJson(this string text)
         {
             if (text == null)
                 return text;

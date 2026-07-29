@@ -6,74 +6,86 @@ using ConsoleZapp;
 
 namespace CzappTuiTester
 {
-    internal class Program
+    public class Program
     {
-        // Typing this command exits the loop
-        private const string ExitCommand = "exit";
+        // Exits the loop
+        private const string EXIT_COMMAND = "exit";
 
-        // Typing this command writes a line longer than the window width, to check overflow truncation
-        private const string LongLineCommand = "long";
+        // Writes an over-width line, checks overflow truncation
+        private const string LONG_LINE_COMMAND = "long";
 
-        // Typing this command adds units to the usage counter, to test RichText per-part recoloring
-        private const string TokensCommand = "add10";
+        // Adds units to the usage counter
+        // - tests RichText per-part recoloring
+        private const string TOKENS_COMMAND = "add10";
 
-        // Typing this command writes a line with non-ASCII glyphs, to check they survive a scroll
-        // without corrupting into replacement chars (the retained-buffer redraw fix)
-        private const string SpecialCharsCommand = "special";
+        // Writes a line with non-ASCII glyphs
+        // - checks they survive a scroll intact (retained-buffer redraw)
+        private const string SPECIAL_CHARS_COMMAND = "special";
 
-        // Typing this command writes a batch of lorem-ipsum filler lines at once, to check body scrolling/redraw with a large volume of lines in one go
-        private const string LoremCommand = "lorem";
+        // Writes a batch of lorem-ipsum lines at once
+        // - checks scrolling/redraw under volume
+        private const string LOREM_COMMAND = "lorem";
 
-        // Typing this command toggles Body's ScrollMode, to compare Manual (position pinned while reviewing) vs AutoScroll (always follows new content) - test with PageUp then "lorem"
-        private const string ScrollModeCommand = "scrollmode";
+        // Toggles Body's ScrollMode (Manual vs AutoScroll)
+        // - test with PageUp then "lorem"
+        private const string SCROLL_MODE_COMMAND = "scrollmode";
 
-        // Typing this command runs a Dialog.YesNoCancel - accepts "y"/"yes", "n"/"no", "c"/"cancel", anything else loops with a re-prompt
-        private const string YesNoCommand = "yesno";
+        // Runs a Dialog.YesNoCancel
+        // - accepts y/yes, n/no, c/cancel, else re-prompts
+        private const string YES_NO_COMMAND = "yesno";
 
-        // Typing this command runs a Stacked-layout Dialog built from plain labels (auto-numbered "1".."3"), to check the multi-line rendering
-        private const string MenuCommand = "menu";
+        // Runs a Stacked Dialog from plain labels
+        // - auto-numbered "1".."3", checks multi-line render
+        private const string MENU_COMMAND = "menu";
 
-        // Typing this command runs a Stacked-layout Dialog with a random number of options (2-5), each a random capitalized lorem word
-        private const string RandomMenuCommand = "randommenu";
+        // Runs a Stacked Dialog with random options
+        // - 2-5 options, random capitalized lorem words
+        private const string RANDOM_MENU_COMMAND = "randommenu";
 
-        // Bounds (inclusive) for the "randommenu" command's random option count
-        private const int RandomMenuMinOptions = 2;
-        private const int RandomMenuMaxOptions = 5;
+        // Bounds (inclusive) for randommenu's option count
+        private const int RANDOM_MENU_MIN_OPTIONS = 2;
+        private const int RANDOM_MENU_MAX_OPTIONS = 5;
 
-        // Highlighted magenta wherever they occur in typed input (registered keyword-color test)
-        private const string InfoCommand = "info";
-        private const string WarnCommand = "warn";
-        private const string ErrorCommand = "error";
+        // Highlighted magenta wherever typed
+        // - keyword-color test
+        private const string INFO_COMMAND = "info";
+        private const string WARN_COMMAND = "warn";
+        private const string ERROR_COMMAND = "error";
 
-        // Typing this command lists every command the sandbox currently has
-        private const string HelpCommand = "help";
+        // Lists every available command
+        private const string HELP_COMMAND = "help";
 
-        // Typing this command re-colors the "ColorPreset" header row with a randomly picked ColorPresets entry
-        private const string RandomClrCommand = "randomclr";
+        // Re-colors the "ColorPreset" row with a random pick
+        private const string RANDOM_CLR_COMMAND = "randomclr";
 
-        // Total tokens for the RichText usage test, used/total turn red past 50% of this, green otherwise
-        private const int TotalTokens = 50;
+        // Total tokens for the usage test
+        // - used/total turn red past 50%, green otherwise
+        private const int TOTAL_TOKENS = 50;
 
-        // App-level "accepted" rule for the RecolorLastInput test: input longer than this is a meaningful message
-        private const int AcceptedLengthThreshold = 10;
+        // RecolorLastInput test threshold
+        // - input longer than this counts as a meaningful message
+        private const int ACCEPTED_LENGTH_THRESHOLD = 10;
 
-        // Number of filler lines written on startup, useful for jumping straight into a scrolled state
-        private const int FillerLines = 0;
+        // Filler lines written on startup
+        // - jump straight into a scrolled state
+        private const int FILLER_LINES = 0;
 
         // Number of lines the "lorem" command writes at once
-        private const int LoremLineCount = 30;
+        private const int LOREM_LINE_COUNT = 30;
 
         // Classic lorem-ipsum filler words, cycled to build lines of varying length
         private static readonly string[] LOREM_WORDS = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua".Split(' ');
 
-        // Every ColorPresets field, name -> (canonical name, pair), keyed case-insensitively so typed commands match regardless of case
+        // Every ColorPresets field, keyed case-insensitively
+        // - so typed commands match regardless of case
         private static readonly Dictionary<string, (string Name, ColorPair Pair)> PRESETS = BuildPresets();
 
-        // Shared randomizer for the "randomclr" command and the initial pick at startup
+        // Shared randomizer
+        // - for "randomclr" and the initial pick at startup
         private static readonly Random RNG = new Random();
 
-        // Reflects over ColorPresets' public static fields to build the command lookup
-        static Dictionary<string, (string Name, ColorPair Pair)> BuildPresets()
+        // Builds the command lookup from ColorPresets' fields
+        private static Dictionary<string, (string Name, ColorPair Pair)> BuildPresets()
         {
             var presets = new Dictionary<string, (string Name, ColorPair Pair)>(StringComparer.OrdinalIgnoreCase);
 
@@ -83,23 +95,27 @@ namespace CzappTuiTester
             return presets;
         }
 
-        // Updates the "ColorPreset" header row: the name colored by the given pair, then the same name again in the console's default colors, so it stays readable even if the pair itself is a low-contrast combination
-        static void UpdatePresetRow(RichText control, string name, ColorPair pair)
+        // Updates the "ColorPreset" row
+        // - name colored by the pair, then again in default colors
+        // - stays readable even if the pair is low-contrast
+        private static void UpdatePresetRow(RichText control, string name, ColorPair pair)
         {
             control.AddText("label", "ColorPreset: ");
             control.AddText("value", pair, name);
             control.AddText("readable", " - {0}", name);
         }
 
-        // Picks a random ColorPresets entry and applies it to the "ColorPreset" row - shared by the "randomclr" command and the initial pick at startup
-        static void ApplyRandomPreset(RichText control)
+        // Picks a random ColorPresets entry, applies it to the row
+        // - shared by "randomclr" and the initial pick at startup
+        private static void ApplyRandomPreset(RichText control)
         {
             var picked = PRESETS.Values.ElementAt(RNG.Next(PRESETS.Count));
             UpdatePresetRow(control, picked.Name, picked.Pair);
         }
 
-        // Updates the RichText usage control's parts, recoloring only the used part red past 50% usage, green otherwise
-        static void UpdateTokensParts(RichText control, int used, int total)
+        // Updates the usage control's parts
+        // - recolors the used part red past 50%, green otherwise
+        private static void UpdateTokensParts(RichText control, int used, int total)
         {
             var over_threshold = used > total * 0.5f;
             var color = over_threshold ? Cli.Conclr.Red : Cli.Conclr.Green;
@@ -111,8 +127,9 @@ namespace CzappTuiTester
             control.AddText("unit", " units");
         }
 
-        // Builds a single numbered lorem-ipsum line of varying word count, for the "lorem" command's scrolling test
-        static string BuildLoremLine(int line_number)
+        // Builds one numbered lorem-ipsum line
+        // - varying word count, for the "lorem" scrolling test
+        private static string BuildLoremLine(int line_number)
         {
             var word_count = 6 + (line_number % 10);
             var words = new string[word_count];
@@ -123,10 +140,11 @@ namespace CzappTuiTester
             return string.Format("{0,2}: {1}", line_number, string.Join(" ", words));
         }
 
-        // Builds a random number (RandomMenuMinOptions..RandomMenuMaxOptions) of capitalized lorem-word labels, for the "randommenu" command
-        static string[] BuildRandomMenuLabels()
+        // Builds random capitalized lorem-word labels
+        // - count within RANDOM_MENU_MIN_OPTIONS..RANDOM_MENU_MAX_OPTIONS
+        private static string[] BuildRandomMenuLabels()
         {
-            var count = RNG.Next(RandomMenuMinOptions, RandomMenuMaxOptions + 1);
+            var count = RNG.Next(RANDOM_MENU_MIN_OPTIONS, RANDOM_MENU_MAX_OPTIONS + 1);
             var labels = new string[count];
 
             for (var i = 0; i < count; i++)
@@ -139,17 +157,17 @@ namespace CzappTuiTester
         }
 
         // Prints every command the sandbox currently has
-        static void PrintHelp(Tui tui)
+        private static void PrintHelp(Tui tui)
         {
             var commands = new[] {
-                HelpCommand, ExitCommand, LongLineCommand, TokensCommand, SpecialCharsCommand,
-                LoremCommand, ScrollModeCommand, RandomClrCommand, YesNoCommand, MenuCommand, RandomMenuCommand,
+                HELP_COMMAND, EXIT_COMMAND, LONG_LINE_COMMAND, TOKENS_COMMAND, SPECIAL_CHARS_COMMAND,
+                LOREM_COMMAND, SCROLL_MODE_COMMAND, RANDOM_CLR_COMMAND, YES_NO_COMMAND, MENU_COMMAND, RANDOM_MENU_COMMAND,
             };
 
             tui.WriteLine("Commands: {0}", string.Join(", ", commands));
         }
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var header = new Header();
 
@@ -171,7 +189,7 @@ namespace CzappTuiTester
             // RichText color test: per-part recoloring (used turns red past 50% usage)
             var tokens = header.AddControl("tokens", new RichText());
             var tokens_used = 0;
-            UpdateTokensParts(tokens, tokens_used, TotalTokens);
+            UpdateTokensParts(tokens, tokens_used, TOTAL_TOKENS);
 
             // ColorPresets command test: colored name + readable fallback, set to a random preset at startup and by any typed preset name or "randomclr"
             var preset_row = header.AddControl("preset", new RichText());
@@ -189,13 +207,13 @@ namespace CzappTuiTester
             tui.SetPromptColor(Cli.Conclr.Yellowd, Cli.Conclr.DefBg);
 
             // Registered keyword-color test: these words get highlighted magenta wherever they occur in input
-            tui.AddKeywordColor(InfoCommand, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
-            tui.AddKeywordColor(WarnCommand, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
-            tui.AddKeywordColor(ErrorCommand, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
+            tui.AddKeywordColor(INFO_COMMAND, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
+            tui.AddKeywordColor(WARN_COMMAND, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
+            tui.AddKeywordColor(ERROR_COMMAND, Cli.Conclr.Magenta, Cli.Conclr.DefBg);
 
             tui.Print();
 
-            for (var i = 1; i <= FillerLines; i++)
+            for (var i = 1; i <= FILLER_LINES; i++)
                 tui.WriteLine("Filler line {0}", i);
 
             string command;
@@ -208,46 +226,46 @@ namespace CzappTuiTester
                 command = tui.ReadCommand();
 
                 // RecolorLastInput test: app-level "accepted" rule - long enough to be a meaningful message
-                if (command != null && command.Length > AcceptedLengthThreshold)
+                if (command != null && command.Length > ACCEPTED_LENGTH_THRESHOLD)
                     tui.RecolorLastInput(Cli.Conclr.Green, Cli.Conclr.DefBg);
 
-                if (command == LongLineCommand)
+                if (command == LONG_LINE_COMMAND)
                     tui.WriteLine("Overflow test: {0}", new string('X', 200));
-                else if (command == TokensCommand)
-                    tui.WriteLine("Units used: {0}/{1}", tokens_used, TotalTokens);
-                else if (command == SpecialCharsCommand)
+                else if (command == TOKENS_COMMAND)
+                    tui.WriteLine("Units used: {0}/{1}", tokens_used, TOTAL_TOKENS);
+                else if (command == SPECIAL_CHARS_COMMAND)
                     tui.WriteLine("Special chars: ■■■ ⣿⣿⣿ (type a few more commands to scroll this line and check it stays intact)");
-                else if (command == LoremCommand)
+                else if (command == LOREM_COMMAND)
                 {
-                    for (var i = 1; i <= LoremLineCount; i++)
+                    for (var i = 1; i <= LOREM_LINE_COUNT; i++)
                         tui.WriteLine(BuildLoremLine(i));
                 }
-                else if (command == ScrollModeCommand)
+                else if (command == SCROLL_MODE_COMMAND)
                 {
                     scroll_mode = scroll_mode == ScrollMode.Manual ? ScrollMode.AutoScroll : ScrollMode.Manual;
                     tui.SetScrollMode(scroll_mode);
                     tui.WriteLine("Scroll mode: {0}", scroll_mode);
                 }
-                else if (command == YesNoCommand)
+                else if (command == YES_NO_COMMAND)
                 {
                     var choice = tui.ReadDialog(Dialog.YesNoCancel("Proceed with the risky operation?")).Value;
                     tui.WriteLine("Dialog result: {0} ({1})", choice.Label, choice.Answers[0]);
                 }
-                else if (command == MenuCommand)
+                else if (command == MENU_COMMAND)
                 {
                     var menu = new Dialog("Pick an action:", DialogLayout.Stacked, "Start", "Pause", "Stop");
                     var choice = tui.ReadDialog(menu).Value;
                     tui.WriteLine("Dialog result: {0} ({1})", choice.Label, choice.Answers[0]);
                 }
-                else if (command == RandomMenuCommand)
+                else if (command == RANDOM_MENU_COMMAND)
                 {
                     var menu = new Dialog("Pick a random option:", DialogLayout.Stacked, BuildRandomMenuLabels());
                     var choice = tui.ReadDialog(menu).Value;
                     tui.WriteLine("Dialog result: {0} ({1})", choice.Label, choice.Answers[0]);
                 }
-                else if (command == HelpCommand)
+                else if (command == HELP_COMMAND)
                     PrintHelp(tui);
-                else if (command == RandomClrCommand)
+                else if (command == RANDOM_CLR_COMMAND)
                 {
                     ApplyRandomPreset(preset_row);
                     tui.UpdateControl("preset");
@@ -257,26 +275,26 @@ namespace CzappTuiTester
                     UpdatePresetRow(preset_row, matched_preset.Name, matched_preset.Pair);
                     tui.UpdateControl("preset");
                 }
-                else if (command != ExitCommand)
+                else if (command != EXIT_COMMAND)
                     tui.WriteLine(Cli.Conclr.Green, Cli.Conclr.DefBg, "You said: {0}", command);
 
                 // RichText live update test: bump token usage, recoloring used/total past 80%
-                if (command == TokensCommand)
+                if (command == TOKENS_COMMAND)
                 {
                     tokens_used += 10;
-                    UpdateTokensParts(tokens, tokens_used, TotalTokens);
+                    UpdateTokensParts(tokens, tokens_used, TOTAL_TOKENS);
                     tui.UpdateControl("tokens");
                 }
 
                 // Live header update test: bump the command count in place, without reprinting the header
-                if (command != ExitCommand)
+                if (command != EXIT_COMMAND)
                 {
                     cmd_count++;
                     cmds.SetText("Cmds: {0}", cmd_count);
                     tui.UpdateControl("cmds");
                 }
 
-            } while (command != ExitCommand);
+            } while (command != EXIT_COMMAND);
         }
     }
 }

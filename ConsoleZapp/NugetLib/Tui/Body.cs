@@ -7,8 +7,9 @@ namespace ConsoleZapp
 {
     public class Body
     {
-        // Set by Tui to its own (private) CheckResize, invoked from inside ReadLineFromKeys's native read loop the instant a WINDOW_BUFFER_SIZE_EVENT arrives
-        internal Action ResizeCheck;
+        // Set by Tui to its own CheckResize
+        // - invoked from ReadLineFromKeys's native loop, on resize
+        public Action ResizeCheck;
 
         private string Prompt = "> ";
         private Cli.Conclr? PromptForeground;
@@ -16,13 +17,17 @@ namespace ConsoleZapp
 
         private readonly List<Part> KeywordColors = new List<Part>();
 
-        // Every previously submitted non-empty command, oldest first - recalled via ConsoleKey.UpArrow/DownArrow in ReadLineFromKeys. Never trimmed, same "keep everything" approach as Rows.
+        // Submitted commands, oldest first
+        // - recalled via Up/DownArrow in ReadLineFromKeys
+        // - never trimmed, same as Rows
         private readonly List<string> History = new List<string>();
 
-        // Index into History currently shown while recalling; -1 means "not recalling" (the live in-progress line is shown instead)
+        // Index into History currently shown while recalling
+        // - -1 means not recalling, the live line is shown instead
         private int HistoryIndex = -1;
 
-        // The in-progress line as it stood right before recall started, restored if the user arrows back down past the newest history entry
+        // In-progress line as it stood before recall started
+        // - restored once the user arrows past the newest entry
         private string HistoryPendingLine;
 
         private string LastInputLine;
@@ -31,17 +36,137 @@ namespace ConsoleZapp
         private int TopRow;
         private int CurrentRow;
 
-        // Retained scrollback: one entry per line ever written, oldest first, never trimmed - the whole session's history stays in memory (see .goals.md, "Real, reviewable scrollback for Body").
-        // Redraws are sourced from here instead of reading back the live console screen content (Console.MoveBufferArea), which is what corrupts non-ASCII glyphs on scroll.
+        /* Retained scrollback, one entry per line, oldest first, never
+           trimmed - the whole session stays in memory (see .goals.md).
+           Redraws source from here rather than the live screen, which
+           is what corrupts non-ASCII glyphs on scroll (MoveBufferArea) */
         private readonly List<List<Part>> Rows = new List<List<Part>>();
 
         private ScrollMode Mode = ScrollMode.Manual;
 
-        // Absolute index into Rows of the topmost row currently shown, while reviewing history; -1 means "following the live tail" (the normal state). Deliberately an absolute index, not "N rows back from the tail" - so a mid-review position doesn't drift when new content is appended (see .goals.md).
+        /* Absolute index into Rows of the topmost row shown while
+           reviewing; -1 means following the live tail (the normal
+           state). Absolute, not relative, so a mid-review position
+           doesn't drift when new content is appended (see .goals.md) */
         private int ScrollOffset = -1;
 
-        // True for the duration of ReadLineFromKeys - lets RedrawRows/ContentCapacity know to leave the bottom row free for the live-typed prompt instead of filling it with history
+        // True while ReadLineFromKeys is reading a line
+        // - tells RedrawRows/ContentCapacity to reserve the bottom row
         private bool PromptActive;
+
+        // Replaces the line's content, cursor to end
+        private static void SetLineText(StringBuilder text, ref int cursor, string value)
+        {
+            text.Clear();
+            text.Append(value);
+            cursor = text.Length;
+        }
+
+        // Applies a decoded key press to the input line
+        private static void ApplyKey(ConsoleKey virtual_key, char character, StringBuilder text, ref int cursor)
+        {
+            switch (virtual_key)
+            {
+                case ConsoleKey.Backspace:
+                    if (cursor > 0)
+                    {
+                        var length = SurrogatePairWidthBefore(text, cursor);
+                        text.Remove(cursor - length, length);
+                        cursor -= length;
+                    }
+                    break;
+
+                case ConsoleKey.Delete:
+                    if (cursor < text.Length)
+                        text.Remove(cursor, SurrogatePairWidthAfter(text, cursor));
+                    break;
+
+                case ConsoleKey.LeftArrow:
+                    if (cursor > 0)
+                        cursor -= SurrogatePairWidthBefore(text, cursor);
+                    break;
+
+                case ConsoleKey.RightArrow:
+                    if (cursor < text.Length)
+                        cursor += SurrogatePairWidthAfter(text, cursor);
+                    break;
+
+                case ConsoleKey.Home:
+                    cursor = 0;
+                    break;
+
+                case ConsoleKey.End:
+                    cursor = text.Length;
+                    break;
+
+                default:
+                    if (!char.IsControl(character))
+                    {
+                        text.Insert(cursor, character);
+                        cursor++;
+                    }
+                    break;
+            }
+        }
+
+        // Chars to remove before cursor for Backspace/Left
+        // - returns 2 if they form a surrogate pair, else 1
+        private static int SurrogatePairWidthBefore(StringBuilder text, int cursor)
+        {
+            if (cursor >= 2 && char.IsSurrogatePair(text[cursor - 2], text[cursor - 1]))
+                return 2;
+
+            return 1;
+        }
+
+        // Chars to remove after cursor for Delete/Right
+        // - returns 2 if they form a surrogate pair, else 1
+        private static int SurrogatePairWidthAfter(StringBuilder text, int cursor)
+        {
+            if (cursor + 1 < text.Length && char.IsSurrogatePair(text[cursor], text[cursor + 1]))
+                return 2;
+
+            return 1;
+        }
+
+        // Truncates text overflowing the window width
+        // - avoids a native wrap/scroll on write
+        private static string ClampToWindowWidth(string text)
+        {
+            const string ELLIPSIS = "...";
+
+            var max_length = Console.WindowWidth - 1;
+
+            if (text.Length <= max_length)
+                return text;
+
+            var content_length = Math.Max(0, max_length - ELLIPSIS.Length);
+
+            return text.Substring(0, content_length) + ELLIPSIS;
+        }
+
+        // Clears a row, writes parts from column 0
+        // - each part in its own color
+        private static void RewriteRow(int row, List<Part> parts)
+        {
+            ClearRow(row);
+            RenderParts(parts);
+        }
+
+        // Blanks a row, cursor left at column 0
+        private static void ClearRow(int row)
+        {
+            Console.SetCursorPosition(0, row);
+            Console.Write(new string(' ', Console.WindowWidth - 1));
+            Console.SetCursorPosition(0, row);
+        }
+
+        // Writes parts at the cursor, each its own color
+        private static void RenderParts(IEnumerable<Part> parts)
+        {
+            foreach (var part in parts)
+                ColorWriter.Write(part.Foreground, part.Background, part.Text);
+        }
 
         // Constructor
         public Body() { }
@@ -52,7 +177,8 @@ namespace ConsoleZapp
             Prompt = prompt;
         }
 
-        // Sets the color the prompt is written in; the typed-in command itself keeps the console's normal color
+        // Sets the prompt's color
+        // - typed text itself stays the console's normal color
         public void SetPromptColor(Cli.Conclr fg, Cli.Conclr bg)
         {
             PromptForeground = fg;
@@ -64,20 +190,21 @@ namespace ConsoleZapp
             SetPromptColor(pair.Foreground, pair.Background);
         }
 
-        // Sets what happens to a mid-review scroll position when new content is written - Manual (default) keeps it fixed, AutoScroll snaps back to the live tail on every write
+        // Sets what happens to scroll on new content
+        // - Manual keeps position, AutoScroll snaps to tail
         public void SetScrollMode(ScrollMode mode)
         {
             Mode = mode;
         }
 
-        // Registers an exact keyword that gets highlighted in the given colors wherever it occurs in typed input
+        // Registers a keyword highlighted wherever typed
         public void AddKeywordColor(string keyword, Cli.Conclr fg, Cli.Conclr bg)
         {
             KeywordColors.Add(new Part { Text = keyword, Foreground = fg, Background = bg });
         }
 
-        // Recolors the whole last input line (prompt included) in place, e.g. to indicate it was accepted.
-        // Caller decides when this applies - must be called before any further write scrolls the area, since the targeted row is remembered by absolute position, not tracked through later scrolling.
+        // Recolors the last input line in place
+        // - call before any further write scrolls the area
         public void RecolorLastInput(Cli.Conclr fg, Cli.Conclr bg)
         {
             if (LastInputRow < 0)
@@ -90,7 +217,8 @@ namespace ConsoleZapp
                 Rows[Rows.Count - 1] = new List<Part> { new Part { Text = LastInputLine, Foreground = fg, Background = bg } };
         }
 
-        // Sets the row where the scrolling area begins, called by Tui after the header is printed
+        // Sets where the scroll area begins
+        // - called by Tui after the header prints
         public void Init(int top_row)
         {
             TopRow = top_row;
@@ -99,7 +227,8 @@ namespace ConsoleZapp
             ScrollOffset = -1;
         }
 
-        // Re-attaches the scroll region to a (possibly unchanged) top row and redraws every retained row, without discarding scrollback history - called by Tui when it detects a console resize, as opposed to Init() which starts a fresh session
+        // Re-attaches the scroll region, redraws all rows
+        // - keeps scrollback, unlike Init()'s fresh start
         public void Redraw(int top_row)
         {
             TopRow = top_row;
@@ -109,29 +238,27 @@ namespace ConsoleZapp
             CurrentRow = NextContentRow();
         }
 
-        // Writes a formatted line into the scrolling area, scrolling the area up if needed
+        // Writes a formatted line, scrolling up if needed
         public void WriteLine(string fmt, params object[] args)
         {
             var text = ClampToWindowWidth(string.Format(fmt, args));
 
             WriteRow(new List<Part> { new Part { Text = text } });
         }
-
-        // Writes a formatted line in the given colors into the scrolling area, scrolling the area up if needed
+        // In the given colors
         public void WriteLine(Cli.Conclr fg, Cli.Conclr bg, string fmt, params object[] args)
         {
             var text = ClampToWindowWidth(string.Format(fmt, args));
 
             WriteRow(new List<Part> { new Part { Text = text, Foreground = fg, Background = bg } });
         }
-
-        // Writes a line built from independently colored parts into the scrolling area, scrolling the area up if needed
+        // Built from independently colored parts
         public void WriteLine(IEnumerable<Part> parts)
         {
             WriteRow(new List<Part>(parts));
         }
 
-        // Prints the prompt and reads a command line from the console, scrolling the area up if needed
+        // Prints the prompt, reads a command line
         public string ReadCommand()
         {
             PreparePromptRow();
@@ -155,7 +282,8 @@ namespace ConsoleZapp
             return command;
         }
 
-        // Prints the dialog's question/options and reads a typed answer via ReadCommand, matching it case-insensitively against the dialog's options - on an unrecognized answer, prints a neutral "not recognized" line and re-prints the same question, looping until one matches
+        // Prints a dialog, reads a matching answer
+        // - unrecognized input reprints the question, loops
         public DialogOption ReadDialog(Dialog dialog)
         {
             while (true)
@@ -173,10 +301,11 @@ namespace ConsoleZapp
             }
         }
 
-        // Reads a line character-by-character via raw ReadConsoleInputW (Interop/ConsoleInput.cs) instead of Console.ReadLine/Console.ReadKey - keeps the cursor pinned to this row (no native wrap/scroll dragging the header), sidesteps ReadKey's lossy codepage translation, and picks up resize events immediately.
-        // Renders at the live CurrentRow field so a mid-loop Body.Redraw() is picked up correctly on the next render.
-        // PageUp/PageDown scroll through retained history instead of editing the line - rendered full-screen in place of the input row. Any other key snaps back to the live tail first (see ScrollOffset), then falls through to normal handling, so e.g. typing a character both exits review and gets typed.
-        // UpArrow/DownArrow instead recall previously submitted commands (see History/RecallHistory) - a separate feature from the PageUp/PageDown scrollback review above.
+        // Reads a line character-by-character
+        // - via raw ReadConsoleInputW, not Console.ReadLine
+        // - keeps cursor pinned, no native wrap/scroll
+        // - PageUp/PageDown review history (see ScrollOffset)
+        // - UpArrow/DownArrow recall History instead
         private string ReadLineFromKeys()
         {
             var text = new StringBuilder();
@@ -245,7 +374,8 @@ namespace ConsoleZapp
             }
         }
 
-        // Leaves review mode and redraws the content area as the true live tail, then re-renders the prompt row - used both when any regular key exits review, and when ScrollPageDown itself scrolls back down to the live tail
+        // Leaves review mode, redraws as the live tail
+        // - also re-renders the prompt row
         private void SnapToLive(StringBuilder text, int cursor)
         {
             ScrollOffset = -1;
@@ -256,7 +386,8 @@ namespace ConsoleZapp
             RenderInputRow(CurrentRow, text, cursor);
         }
 
-        // Moves the reviewed position one screenful back (towards older history), entering review mode if not already in it, clamped to the start of retained history
+        // Moves review position one screenful back
+        // - clamped to the start of retained history
         private void ScrollPageUp()
         {
             var capacity = VisibleCapacity();
@@ -266,7 +397,8 @@ namespace ConsoleZapp
             ScrollOffset = Math.Max(0, current_top - capacity);
         }
 
-        // Moves the reviewed position one screenful forward (towards newer history), snapping back to the live tail once it catches up - a no-op if already live
+        // Moves review position one screenful forward
+        // - snaps to live tail once caught up, else no-op
         private void ScrollPageDown()
         {
             if (ScrollOffset < 0)
@@ -279,7 +411,8 @@ namespace ConsoleZapp
             ScrollOffset = next_top >= live_top ? -1 : next_top;
         }
 
-        // Moves through History by the given step (-1 towards older, +1 towards newer), replacing the in-progress line with the recalled entry - saves/restores the line being typed when recall starts/ends, and clamps at the oldest entry instead of wrapping
+        // Moves through History by the given step
+        // - saves/restores the in-progress line at the edges
         private void RecallHistory(int step, StringBuilder text, ref int cursor)
         {
             if (History.Count == 0)
@@ -310,80 +443,8 @@ namespace ConsoleZapp
             SetLineText(text, ref cursor, History[HistoryIndex]);
         }
 
-        // Replaces the in-progress line's full content, moving the cursor to the end
-        private static void SetLineText(StringBuilder text, ref int cursor, string value)
-        {
-            text.Clear();
-            text.Append(value);
-            cursor = text.Length;
-        }
-
-        // Applies a single decoded key press to the in-progress input line
-        private static void ApplyKey(ConsoleKey virtual_key, char character, StringBuilder text, ref int cursor)
-        {
-            switch (virtual_key)
-            {
-                case ConsoleKey.Backspace:
-                    if (cursor > 0)
-                    {
-                        var length = SurrogatePairWidthBefore(text, cursor);
-                        text.Remove(cursor - length, length);
-                        cursor -= length;
-                    }
-                    break;
-
-                case ConsoleKey.Delete:
-                    if (cursor < text.Length)
-                        text.Remove(cursor, SurrogatePairWidthAfter(text, cursor));
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    if (cursor > 0)
-                        cursor -= SurrogatePairWidthBefore(text, cursor);
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    if (cursor < text.Length)
-                        cursor += SurrogatePairWidthAfter(text, cursor);
-                    break;
-
-                case ConsoleKey.Home:
-                    cursor = 0;
-                    break;
-
-                case ConsoleKey.End:
-                    cursor = text.Length;
-                    break;
-
-                default:
-                    if (!char.IsControl(character))
-                    {
-                        text.Insert(cursor, character);
-                        cursor++;
-                    }
-                    break;
-            }
-        }
-
-        // Returns 2 if the two chars immediately before the cursor form a surrogate pair, 1 otherwise - so Backspace/Left can't split a pair produced by ReadConsoleInputW
-        private static int SurrogatePairWidthBefore(StringBuilder text, int cursor)
-        {
-            if (cursor >= 2 && char.IsSurrogatePair(text[cursor - 2], text[cursor - 1]))
-                return 2;
-
-            return 1;
-        }
-
-        // Returns 2 if the two chars immediately after the cursor form a surrogate pair, 1 otherwise - so Delete/Right can't split a pair produced by ReadConsoleInputW
-        private static int SurrogatePairWidthAfter(StringBuilder text, int cursor)
-        {
-            if (cursor + 1 < text.Length && char.IsSurrogatePair(text[cursor], text[cursor + 1]))
-                return 2;
-
-            return 1;
-        }
-
-        // Redraws the prompt + currently typed text on the given row, horizontal-scrolling the visible window so the cursor position always stays on-screen instead of wrapping to another row
+        // Redraws prompt + typed text on the given row
+        // - horizontally scrolls so the cursor stays visible
         private void RenderInputRow(int row, StringBuilder text, int cursor)
         {
             var available_width = Math.Max(0, Console.WindowWidth - 1 - Prompt.Length);
@@ -401,7 +462,8 @@ namespace ConsoleZapp
             Console.SetCursorPosition(Prompt.Length + (cursor - window_start), row);
         }
 
-        // Appends a row's parts to the retained buffer and, unless the user is mid-review (Manual scroll mode), writes it to the console, shifting the visible window (or repositioning a concurrently-active prompt) first if needed
+        // Appends parts to the buffer, writes if not reviewing
+        // - shifts the window/prompt first if needed
         private void WriteRow(List<Part> parts)
         {
             // a reserved prompt row can never take the single-row fast path below: appending content may move where that reserved row lands, which the fast path doesn't account for
@@ -428,7 +490,7 @@ namespace ConsoleZapp
             }
         }
 
-        // Recolors any registered keyword occurrences found in the just-typed command, in place - reuses SplitByKeywords so live and post-redraw overlap resolution always agree
+        // Recolors registered keywords in the typed command
         private void HighlightKeywords(string command, int row)
         {
             if (string.IsNullOrEmpty(command))
@@ -448,7 +510,8 @@ namespace ConsoleZapp
             }
         }
 
-        // Builds the retained-buffer parts for a typed command row (prompt + command, keyword matches colored), mirroring what ReadCommand/HighlightKeywords already put on screen - used so a later redraw from the buffer (on scroll or resize) reproduces the same highlighting
+        // Builds retained-buffer parts for a command row
+        // - mirrors what ReadCommand put on screen
         private List<Part> BuildCommandRowParts(string command)
         {
             var parts = new List<Part>
@@ -464,7 +527,8 @@ namespace ConsoleZapp
             return parts;
         }
 
-        // Splits command text into parts around registered keyword matches, earliest match wins on overlap
+        // Splits text around keyword matches
+        // - earliest match wins on overlap
         private List<Part> SplitByKeywords(string command)
         {
             var matches = new List<(int Start, int End, Part Keyword)>();
@@ -508,22 +572,8 @@ namespace ConsoleZapp
             return parts;
         }
 
-        // Truncates text that would overflow the window width, avoiding a native wrap/scroll on write
-        private static string ClampToWindowWidth(string text)
-        {
-            const string ELLIPSIS = "...";
-
-            var max_length = Console.WindowWidth - 1;
-
-            if (text.Length <= max_length)
-                return text;
-
-            var content_length = Math.Max(0, max_length - ELLIPSIS.Length);
-
-            return text.Substring(0, content_length) + ELLIPSIS;
-        }
-
-        // Marks the prompt row as reserved and, if the live tail is already full, shifts the visible window so the bottom row is free for it - called before ReadLineFromKeys starts reading, mirroring what WriteRow does for a regular line
+        // Reserves the prompt row, shifts window if full
+        // - called before ReadLineFromKeys starts reading
         private void PreparePromptRow()
         {
             PromptActive = true;
@@ -539,7 +589,7 @@ namespace ConsoleZapp
             CurrentRow = NextContentRow();
         }
 
-        // Total rows the scroll region can physically show, regardless of what's currently reserved for a live prompt
+        // Total rows the scroll region can show
         private int VisibleCapacity()
         {
             var bottom_row = Console.WindowHeight - 1;
@@ -550,7 +600,8 @@ namespace ConsoleZapp
             return safe_row - TopRow + 1;
         }
 
-        // How many of VisibleCapacity's rows are available for retained content - one less than full while a live prompt is being typed (its row is reserved), unless the user has scrolled away to review history, in which case the prompt isn't shown at all and the full capacity is history
+        // Rows available for retained content
+        // - one less while a live prompt reserves its row
         private int ContentCapacity()
         {
             var capacity = VisibleCapacity();
@@ -561,14 +612,14 @@ namespace ConsoleZapp
             return capacity;
         }
 
-        // The absolute row the (Rows.Count)-th line (0-indexed) belongs on - i.e. where the next written line goes, or where the live prompt sits once it's the last thing pending. Always keyed off the full VisibleCapacity, independent of whether that row is currently reserved for a prompt: the reservation only affects how much of Rows gets drawn above it (see ContentCapacity), not which row this is.
+        // The absolute row the next written line lands on
         private int NextContentRow()
         {
             return TopRow + Math.Min(Rows.Count, Math.Max(0, VisibleCapacity() - 1));
         }
 
-        // Redraws the whole scroll region from the retained buffer - used instead of Console.MoveBufferArea, whose CHAR_INFO copy path corrupts non-ASCII glyphs (e.g. block/braille characters) under codepage 65001 in the legacy console host.
-        // Sourced from ScrollOffset when reviewing history, otherwise from the live tail (the last ContentCapacity rows, leaving room for a reserved prompt row if one is active). Always blanks every row through the true bottom of the region, even past what ContentCapacity draws, so a shrinking reservation can't leave stale content behind.
+        // Redraws the scroll region from the retained buffer
+        // - avoids Console.MoveBufferArea, which corrupts glyphs
         private void RedrawRows()
         {
             var capacity = ContentCapacity();
@@ -589,28 +640,6 @@ namespace ConsoleZapp
                 ClearRow(row);
                 row++;
             }
-        }
-
-        // Clears a row, then writes the given parts into it from column 0, coloring each part per its own setting
-        private static void RewriteRow(int row, List<Part> parts)
-        {
-            ClearRow(row);
-            RenderParts(parts);
-        }
-
-        // Blanks a row without disturbing the cursor row itself, leaving the cursor at column 0
-        private static void ClearRow(int row)
-        {
-            Console.SetCursorPosition(0, row);
-            Console.Write(new string(' ', Console.WindowWidth - 1));
-            Console.SetCursorPosition(0, row);
-        }
-
-        // Writes parts at the current cursor position, coloring each part per its own setting
-        private static void RenderParts(IEnumerable<Part> parts)
-        {
-            foreach (var part in parts)
-                ColorWriter.Write(part.Foreground, part.Background, part.Text);
         }
     }
 }

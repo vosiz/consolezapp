@@ -13,12 +13,6 @@ namespace ConsoleZapp
             Unit = unit;
         }
 
-        // Sets value using format string and arguments
-        public void SetValue(string fmt, params object[] args)
-        {
-            ValueText.SetText(fmt, args);
-        }
-
         // Renders control content
         public override string Render()
         {
@@ -28,6 +22,12 @@ namespace ConsoleZapp
                 rendered += $" {Unit}";
 
             return rendered;
+        }
+
+        // Sets value using format string and arguments
+        public void SetValue(string fmt, params object[] args)
+        {
+            ValueText.SetText(fmt, args);
         }
     }
 }

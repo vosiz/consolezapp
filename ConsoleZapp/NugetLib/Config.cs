@@ -7,31 +7,43 @@ namespace ConsoleZapp
 {
     public class Config
     {
-        public class Coloring {
-
+        public class Coloring
+        {
             public Cli.Conclr Foreground = Cli.Conclr.DefaultForeground;
-            public Cli.Conclr Background = Cli.Conclr.DefaultForeground;
+            public Cli.Conclr Background = Cli.Conclr.DefaultBackground;
 
+            // Constructor with foreground/background
             public Coloring(Cli.Conclr text, Cli.Conclr back) {
 
                 Foreground = text;
                 Background = back;
             }
-
+            // Default colors
             public Coloring() : this(Cli.Conclr.DefFg, Cli.Conclr.DefBg) { }
 
         }
 
-        public enum LineType { 
-        
+        public enum LineType
+        {
             General,    // corner-line-corner
             Custom,     // fully customized
         }
 
-        public class Line {
+        public class Line
+        {
+            public const int MAX_WIDTH = 80;
 
-            public static readonly int MaxWidth = 80;
+            public LineType Type { get; private set; } = LineType.General;
+            public Coloring Coloring { get; private set; } = new Coloring();
 
+            public string Format { get; private set; } = "{0}";
+            public string[] Args { get; set; } = new string[1] { "" };
+
+            public char LineChar { get; private set; } = '=';
+            public char LineCorner { get; private set; } = '+';
+            public int LineLength { get; private set; } = MAX_WIDTH;
+
+            // Creates a general corner-line-corner line
             public static Line Create(char line, char corner, int width) {
 
                 var l = new Line();
@@ -42,6 +54,7 @@ namespace ConsoleZapp
                 return l;
             }
 
+            // Creates a fully custom-formatted line
             public static Line CreateCustom(string fmt, Coloring coloring = null) {
 
                 var l = new Line();
@@ -53,23 +66,10 @@ namespace ConsoleZapp
                 return l;
             }
 
-
-            public LineType Type { get; private set; } = LineType.General;
-            public Coloring Coloring { get; private set; } = new Coloring();
-
-            public string Format { get; private set; } = "{0}";
-            public string[] Args { get; set; }
-                = new string[1] {
-                    ""
-            };
-
-            public char LineChar { get; private set; } = '=';
-            public char LineCorner { get; private set; } = '+';
-            public int LineLength { get; private set; } = MaxWidth;
-
+            // Formats the line according to its type
             public override string ToString() {
 
-                string tostr = string.Empty;
+                var tostr = string.Empty;
 
                 try
                 {
@@ -94,7 +94,7 @@ namespace ConsoleZapp
                             break;
 
                         default:
-                            throw new NotImplementedException("Unimplemnted state");
+                            throw new NotImplementedException("Unimplemented state");
                     }
                 }
                 catch (Exception exc)
@@ -107,26 +107,25 @@ namespace ConsoleZapp
             }
         }
 
-
-        public Dictionary<string, Coloring> Colorings { get; } 
-            = new Dictionary<string, Coloring>() {
-
-                { "debug", new Coloring(Cli.Conclr.Grayd, Cli.Conclr.DefBg) },
-                { "info", new Coloring(Cli.Conclr.DefFg, Cli.Conclr.DefBg) },
-                { "warning", new Coloring(Cli.Conclr.Yellow, Cli.Conclr.DefBg) },
-                { "error", new Coloring(Cli.Conclr.Red, Cli.Conclr.DefBg) },
-                { "exception", new Coloring(Cli.Conclr.White, Cli.Conclr.Red) },
-                { "success", new Coloring(Cli.Conclr.Green, Cli.Conclr.DefBg) },
-                { "fail", new Coloring(Cli.Conclr.Redd, Cli.Conclr.DefBg) },
+        public Dictionary<string, Coloring> Colorings { get; } = new Dictionary<string, Coloring>()
+        {
+            { "debug", new Coloring(Cli.Conclr.Grayd, Cli.Conclr.DefBg) },
+            { "info", new Coloring(Cli.Conclr.DefFg, Cli.Conclr.DefBg) },
+            { "warning", new Coloring(Cli.Conclr.Yellow, Cli.Conclr.DefBg) },
+            { "error", new Coloring(Cli.Conclr.Red, Cli.Conclr.DefBg) },
+            { "exception", new Coloring(Cli.Conclr.White, Cli.Conclr.Red) },
+            { "success", new Coloring(Cli.Conclr.Green, Cli.Conclr.DefBg) },
+            { "fail", new Coloring(Cli.Conclr.Redd, Cli.Conclr.DefBg) },
         };
 
-        public Dictionary<string, Line> Lining { get; }
-            = new Dictionary<string, Line>() {
-
-                { "1", Line.Create('=', '+', 50)},
-                { "2", Line.Create('-', '+', 24)},
+        public Dictionary<string, Line> Lining { get; } = new Dictionary<string, Line>()
+        {
+            { "1", Line.Create('=', '+', 50) },
+            { "2", Line.Create('-', '+', 24) },
         };
 
+        // Constructor
+        public Config() { }
 
         // Adds new coloring
         public void AddColoring(string key, Coloring coloring) {
@@ -140,7 +139,7 @@ namespace ConsoleZapp
         // Add new headline
         public void AddLine(string key, Line lining) {
 
-            if (Colorings.ContainsKey(key))
+            if (Lining.ContainsKey(key))
                 throw new ArgumentException($"Key ({key}) already exists");
 
             Lining.Add(key, lining);

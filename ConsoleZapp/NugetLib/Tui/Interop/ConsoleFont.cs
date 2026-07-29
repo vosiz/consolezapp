@@ -3,11 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace ConsoleZapp.Interop
 {
-    internal static class ConsoleFont
+    public static class ConsoleFont
     {
         private const int STD_OUTPUT_HANDLE = -11;
         private const int LF_FACESIZE = 32;
         private const uint TMPF_TRUETYPE = 0x04;
+
+        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct COORD
@@ -35,12 +37,11 @@ namespace ConsoleZapp.Interop
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX lpConsoleCurrentFontEx);
 
-        private static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
-
-        // Reports whether the console is currently using a raster (bitmap) font, which can't decode multi-byte UTF-8 box-drawing glyphs into a single character and garbles them one byte at a time.
-        // Returns false (assume fine, no fallback needed) for redirected/non-interactive output or if the font can't be read at all - there's no real console font to inspect there, or no reliable signal to act on.
-        // Deliberately read-only: an earlier version also tried to force a TrueType font via SetCurrentConsoleFontEx, but changing the font live could itself shift the console's effective column/row geometry underneath Tui's own row-position math - not worth the risk for a cosmetic upgrade.
-        internal static bool IsRasterFont()
+        // Reports whether the console uses a raster (bitmap) font
+        // - a raster font garbles multi-byte UTF-8 box-drawing glyphs
+        // - returns false (assume fine) if redirected or unreadable
+        // - read-only by design, forcing a font live shifts geometry
+        public static bool IsRasterFont()
         {
             if (Console.IsOutputRedirected)
                 return false;

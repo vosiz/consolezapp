@@ -4,12 +4,12 @@ namespace ConsoleZapp
 {
     public class Container
     {
-        private char BorderHorizontal = '─';
-        private char BorderVertical = '│';
-        private char BorderTopLeft = '┌';
-        private char BorderTopRight = '┐';
-        private char BorderBottomLeft = '└';
-        private char BorderBottomRight = '┘';
+        private char BorderHorizontal   = '─';
+        private char BorderVertical     = '│';
+        private char BorderTopLeft      = '┌';
+        private char BorderTopRight     = '┐';
+        private char BorderBottomLeft   = '└';
+        private char BorderBottomRight  = '┘';
 
         private Cli.Conclr? BorderForeground;
         private Cli.Conclr? BorderBackground;
@@ -22,7 +22,7 @@ namespace ConsoleZapp
         // Constructor
         public Container() { }
 
-        // Adds a control under the given name, returns it back for chaining
+        // Adds a control, returns it back for chaining
         public T AddControl<T>(string name, T control) where T : Control
         {
             Controls.Set(name, control);
@@ -35,14 +35,8 @@ namespace ConsoleZapp
             return Controls.TryGetValue(name, out var control) ? control : null;
         }
 
-        // Overrides the border characters used when printing this container, replacing the Unicode box-drawing default
-        public void SetBorderChars(
-            char horizontal,
-            char vertical,
-            char top_left,
-            char top_right,
-            char bottom_left,
-            char bottom_right)
+        // Overrides the Unicode box-drawing border chars
+        public void SetBorderChars(char horizontal, char vertical, char top_left, char top_right, char bottom_left, char bottom_right)
         {
             BorderHorizontal = horizontal;
             BorderVertical = vertical;
@@ -52,20 +46,21 @@ namespace ConsoleZapp
             BorderBottomRight = bottom_right;
         }
 
-        // Sets the color the border (corners, edges) is printed in
+        // Sets the border's color
         public void SetBorderColor(Cli.Conclr fg, Cli.Conclr bg)
         {
             BorderForeground = fg;
             BorderBackground = bg;
         }
 
-        // Returns the total row count this container takes up when printed (borders + one row per control)
+        // Returns total printed row count
+        // - borders + one row per control
         public int GetHeight()
         {
             return 2 + Controls.Count;
         }
 
-        // Prints the container as a bordered box, one control per row
+        // Prints as a bordered box, one control per row
         public void Print(int width)
         {
             TopRow = Console.CursorTop;
@@ -91,7 +86,8 @@ namespace ConsoleZapp
             Console.SetCursorPosition(0, row);
         }
 
-        // Re-renders a single control's row in place, leaving borders and every other row untouched
+        // Re-renders one control's row in place
+        // - borders and other rows untouched
         public void UpdateControl(string name)
         {
             if (!Controls.TryGetValue(name, out var control))
@@ -103,7 +99,7 @@ namespace ConsoleZapp
             WriteRow(control, Width);
         }
 
-        // Finds a control's row position within this container, based on add order
+        // Finds a control's row position, by add order
         private int GetControlRowIndex(string name)
         {
             var index = 0;
@@ -119,7 +115,8 @@ namespace ConsoleZapp
             return -1;
         }
 
-        // Prints a horizontal border line at the given row, picking corner chars based on whether it's the top or bottom edge
+        // Prints a horizontal border line at the given row
+        // - picks corner chars for top vs. bottom edge
         private void PrintBorder(int width, bool is_top, int row)
         {
             var left_corner = is_top ? BorderTopLeft : BorderBottomLeft;
@@ -129,7 +126,8 @@ namespace ConsoleZapp
             WriteBorderText(left_corner + new string(BorderHorizontal, Math.Max(0, width - 2)) + right_corner);
         }
 
-        // Writes a single control's row at the current cursor position, coloring each part per its own setting
+        // Writes a control's row at the cursor
+        // - each part in its own color
         private void WriteRow(Control control, int width)
         {
             WriteBorderText(BorderVertical.ToString());
@@ -163,7 +161,7 @@ namespace ConsoleZapp
             WriteBorderText(BorderVertical.ToString());
         }
 
-        // Writes text in the border color, if set, resetting afterwards
+        // Writes text in the border color, if set
         private void WriteBorderText(string text)
         {
             ColorWriter.Write(BorderForeground, BorderBackground, text);
