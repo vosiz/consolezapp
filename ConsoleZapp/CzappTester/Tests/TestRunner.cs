@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -17,7 +18,7 @@ namespace CzappTester.Tests
                 .OrderBy(t => t.FullName);
 
             var passed = 0;
-            var failed = 0;
+            var failures = new List<(string Name, string Reason)>();
 
             foreach (var test_class in test_classes) {
 
@@ -37,14 +38,24 @@ namespace CzappTester.Tests
 
                     } catch (TargetInvocationException exc) {
 
-                        Console.WriteLine(string.Format("[FAIL] {0} - {1}", name, exc.InnerException?.Message));
-                        failed++;
+                        var reason = exc.InnerException?.Message;
+                        Console.WriteLine(string.Format("[FAIL] {0} - {1}", name, reason));
+                        failures.Add((name, reason));
                     }
                 }
             }
 
             Console.WriteLine();
-            Console.WriteLine(string.Format("Passed: {0}, Failed: {1}", passed, failed));
+            Console.WriteLine(string.Format("Passed: {0}, Failed: {1}", passed, failures.Count));
+
+            if (failures.Count > 0) {
+
+                Console.WriteLine();
+                Console.WriteLine("Failed tests:");
+
+                foreach (var failure in failures)
+                    Console.WriteLine(string.Format("{0} - {1}", failure.Name, failure.Reason));
+            }
         }
 
     }
